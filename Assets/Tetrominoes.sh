@@ -1,30 +1,28 @@
-#!/bin/bash
-
 declare -A colours
 
 colours['RESET']='\e[0m'
 colours['WHITE']='\e[0;37m'
 
-colours['true,R']='\e[0m'  # White
-colours['false,R']='\e[0m'   # White
+colours['false,R']='\e[0m'  # White
+colours['true,R']='\e[0m'   # White
 
 # GUI
-colours['true,I']='\e[38;5;43m'    # Cyan
-colours['true,J']='\e[38;5;27m'    # Blue
-colours['true,L']='\e[38;5;166m'   # Orange
-colours['true,O']='\e[38;5;178m'   # Yellow
-colours['true,S']='\e[38;5;76m'    # Green
-colours['true,T']='\e[38;5;128m'   # Purple
-colours['true,Z']='\e[38;5;160m'   # Red
+colours['false,I']='\e[38;5;43m'    # Cyan
+colours['false,J']='\e[38;5;27m'    # Blue
+colours['false,L']='\e[38;5;166m'   # Orange
+colours['false,O']='\e[38;5;178m'   # Yellow
+colours['false,S']='\e[38;5;76m'    # Green
+colours['false,T']='\e[38;5;128m'   # Purple
+colours['false,Z']='\e[38;5;160m'   # Red
 
 # CLI
-colours['false,I']='\e[38;5;27m'     # Blue
-colours['false,J']='\e[38;5;128m'    # Purple
-colours['false,L']='\e[38;5;178m'    # Yellow
-colours['false,O']='\e[38;5;76m'     # Green
-colours['false,S']='\e[38;5;43m'     # Cyan
-colours['false,T']='\e[38;5;205m'    # Pink
-colours['false,Z']='\e[38;5;160m'    # Red
+colours['true,I']='\e[38;5;27m'     # Blue
+colours['true,J']='\e[38;5;128m'    # Purple
+colours['true,L']='\e[38;5;178m'    # Yellow
+colours['true,O']='\e[38;5;76m'     # Green
+colours['true,S']='\e[38;5;43m'     # Cyan
+colours['true,T']='\e[38;5;205m'    # Pink
+colours['true,Z']='\e[38;5;160m'    # Red
 
 I=(
     4
