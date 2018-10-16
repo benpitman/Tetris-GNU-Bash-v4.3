@@ -10,14 +10,14 @@ read -r -d '' mainGUI << MAIN_GUI
 │                                        │
 │                                        │
 │                                        │
+│            1   P L A Y E R             │
+│                                        │
+│                                        │
+│            2   P L A Y E R             │
 │                                        │
 │                                        │
 │                                        │
-│                                        │
-│                                        │
-│                                        │
-│                                        │
-│                                        │
+│                Q U I T                 │
 │                                        │
 │                                        │
 │                                        │
@@ -37,20 +37,36 @@ read -r -d '' mainCLI << MAIN_CLI
 │                                        │
 │                                        │
 │                                        │
+│            1   P L A Y E R             │
+│                                        │
+│                                        │
+│            2   P L A Y E R             │
 │                                        │
 │                                        │
 │                                        │
-│                                        │
-│                                        │
-│                                        │
-│                                        │
-│                                        │
+│                Q U I T                 │
 │                                        │
 │                                        │
 │                                        │
 │                           © Ben Pitman │
 └────────────────────────────────────────┘
 MAIN_CLI
+
+declare -A mainOptions
+
+mainOptions['max']=2
+
+mainOptions['0,y']=12
+mainOptions['0,x']=14
+mainOptions['0,text']='1   P L A Y E R'
+
+mainOptions['1,y']=15
+mainOptions['1,x']=14
+mainOptions['1,text']='2   P L A Y E R'
+
+mainOptions['2,y']=19
+mainOptions['2,x']=18
+mainOptions['2,text']='Q U I T'
 
 read -r -d '' fieldGUI << FIELD_GUI
 ┌────────────────────┬───────────────────┐
