@@ -1,7 +1,7 @@
 declare -A colours
 
-colours['RESET']='\e[0m'
-colours['WHITE']='\e[0;37m'
+colours['reset']='\e[0m'
+colours['white']='\e[0;37m'
 
 colours['false,R']='\e[0m'  # White
 colours['true,R']='\e[0m'   # White

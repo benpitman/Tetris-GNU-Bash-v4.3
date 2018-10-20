@@ -7,16 +7,23 @@
         True if script is to be run in debug mode
 TetrisDoc
 
+extrap()
+{
+    stty echo
+    tput cvvis
+}
+trap extrap EXIT
+
 [ -z "$1" ] && exit 1
 
 # If game is loaded on a terminal outside of a GUI environment
 if $1; then
-    inTTY=false
+    _inTTY=true
 else
     if [ -z "$DISPLAY" ] || [[ "$TERM" == "linux" ]]; then
-        inGUI='X'
+        _inTTY=true
     fi
-    inTTY=true
+    _inTTY=false
 fi
 
 logDir=/var/games/tetris
@@ -31,7 +38,9 @@ fi
 
 assetPath='Assets/'
 
-source "${assetPath}"*
+for asset in ${assetPath}*; do
+    source "$asset"
+done
 
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
@@ -56,6 +65,8 @@ gameLoop()
         postTime    \
         preTime     \
         readPid     \
+        speed       \
+        tick        \
         timeTaken=0
 
     while true; do
@@ -71,11 +82,12 @@ gameLoop()
             [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
             _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
             renderPiece
-            renderNextPiece
+            renderNextPiece $_nextPiece
         fi
 
         preTime=$( date '+%2N' | sed 's/^0//' )
-        IFS= read -rsn1 -t0.$(( $speed - $timeTaken )) key1
+        tick=$(( $speed - $timeTaken ))
+        IFS= read -rsn1 -t0.$(( $tick < 0 ? 0 : $tick )) key1
         readPid=$?
         IFS= read -rsn1 -t0.0001 key2
         IFS= read -rsn1 -t0.0001 key3
@@ -84,7 +96,7 @@ gameLoop()
         if (( $readPid != 142 )); then
             # If enter or space is pressed
             if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
-                # Rotate
+                : # Rotate
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
                 if [ -z "$key2" ]; then
@@ -114,14 +126,15 @@ newGame()
     # Set level to 0 and then instantly level up
     _level=0
     _score=0
-    ScoreModifier false
-    GameLoop
+    # scoreModifier false
+    gameLoop
     return $?
 }
 
-while renderScreen; do
+while true; do
     case $_state in
-        1)  NewGame;;
+        *)  renderScreen;;&
+        1)  newGame;;
         2)  ;;
         3)  ;;
     esac

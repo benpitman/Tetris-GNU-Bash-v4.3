@@ -54,7 +54,7 @@ MAIN_CLI
 
 declare -A mainOptions
 
-mainOptions['max']=2
+mainOptions['max']=3
 
 mainOptions['0,y']=11
 mainOptions['0,x']=14
@@ -66,7 +66,7 @@ mainOptions['1,text']='S C O R E S'
 
 mainOptions['2,y']=17
 mainOptions['2,x']=14
-mainOptions['1,text']='S E T T I N G S'
+mainOptions['2,text']='S E T T I N G S'
 
 mainOptions['3,y']=20
 mainOptions['3,x']=18
@@ -125,6 +125,20 @@ read -r -d '' fieldCLI << FIELD_CLI
 │                    │  └──────────┘     │
 └────────────────────┴───────────────────┘
 FIELD_CLI
+
+declare -A fieldOptions
+
+fieldOptions['score,x']=28
+fieldOptions['score,y']=6
+fieldOptions['score,width']=9
+
+fieldOptions['level,x']=28
+fieldOptions['level,y']=11
+fieldOptions['level,width']=9
+
+fieldOptions['lines,x']=28
+fieldOptions['lines,y']=15
+fieldOptions['lines,width']=9
 
 declare -A nextPiece
 

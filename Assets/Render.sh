@@ -14,18 +14,13 @@ pause()
 
 levelUp()
 {
-    #TODO level up needs to be on the right
     (( _level++ ))
-    tput cup 19 21
-    printf "\e[1mLEVEL $_level\e[0m"
-    sleep 2
-    tput cup 19 21
-    printf "         "
+    printf "\e[%s;%sH%${fieldOptions[level,width]}s" ${fieldOptions[level,y]} ${fieldOptions[level,x]} $_level
 }
 
 renderPiece()
 {
-
+    return
 }
 
 navigateMenu()
@@ -62,21 +57,21 @@ navigateMenu()
 
 renderMain()
 {
-    $inCLI && screen="$mainCLI" || screen="$mainGUI"
+    $_inTTY && screen="$mainCLI" || screen="$mainGUI"
     printf '%s' "$screen"
 
     navigateMenu 'mainOptions'
     case $? in
         0)  _state=1;; # New game
         1)  _state=2;; # Scores
-        3)  _state=3;; # Settings
-        4)  exit 0;
+        2)  _state=3;; # Settings
+        3)  exit 0;
     esac
 }
 
 renderField()
 {
-    $inCLI && screen="$fieldCLI" || screen="$fieldGUI"
+    $_inTTY && screen="$fieldCLI" || screen="$fieldGUI"
     printf '%s' "$screen"
 }
 
@@ -96,7 +91,7 @@ renderScreen()
 
 renderNextPiece()
 {
-    local -n piece="$_nextPiece"
+    local -n piece="$1"
     local                   \
         bit=0               \
         code                \
@@ -105,10 +100,9 @@ renderNextPiece()
         yAx=0
 
     $reset && renderNextPiece 'R' false
-
+    printf "${colours[$_inTTY,$1]}"
 
     for (( ; $yAx < 4; bit += ${piece[0]}, yAx++ )); do
-        printf "${colours[$inCLI,$1]}"
 
         code="${piece[1]:$bit:${piece[0]}}"
         [ -z "$code" ] && continue
@@ -118,4 +112,6 @@ renderNextPiece()
 
         printf '\e[%s;%sH%b' $(( ${nextPiece[$1,y]} + $yAx )) ${nextPiece[$1,x]} "$code"
     done
+
+    $reset && printf "${colours[reset]}"
 }
