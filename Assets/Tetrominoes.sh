@@ -24,6 +24,8 @@ colours['true,S']='\e[38;5;43m'     # Cyan
 colours['true,T']='\e[38;5;205m'    # Pink
 colours['true,Z']='\e[38;5;160m'    # Red
 
+pieces=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
+
 I=(
     4
     '0000111100000000'

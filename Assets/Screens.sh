@@ -9,16 +9,16 @@ read -r -d '' mainGUI << MAIN_GUI
 │└──────────────────────────────────────┘│
 │                                        │
 │                                        │
+│            N E W   G A M E             │
 │                                        │
-│            1   P L A Y E R             │
+│                                        │
+│              S C O R E S               │
 │                                        │
 │                                        │
-│            2   P L A Y E R             │
-│                                        │
+│            S E T T I N G S             │
 │                                        │
 │                                        │
 │                Q U I T                 │
-│                                        │
 │                                        │
 │                                        │
 │                           © Ben Pitman │
@@ -36,16 +36,16 @@ read -r -d '' mainCLI << MAIN_CLI
 │└──────────────────────────────────────┘│
 │                                        │
 │                                        │
+│            N E W   G A M E             │
 │                                        │
-│            1   P L A Y E R             │
+│                                        │
+│              S C O R E S               │
 │                                        │
 │                                        │
-│            2   P L A Y E R             │
-│                                        │
+│            S E T T I N G S             │
 │                                        │
 │                                        │
 │                Q U I T                 │
-│                                        │
 │                                        │
 │                                        │
 │                           © Ben Pitman │
@@ -56,17 +56,21 @@ declare -A mainOptions
 
 mainOptions['max']=2
 
-mainOptions['0,y']=12
+mainOptions['0,y']=11
 mainOptions['0,x']=14
-mainOptions['0,text']='1   P L A Y E R'
+mainOptions['0,text']='N E W   G A M E'
 
-mainOptions['1,y']=15
-mainOptions['1,x']=14
-mainOptions['1,text']='2   P L A Y E R'
+mainOptions['1,y']=14
+mainOptions['1,x']=16
+mainOptions['1,text']='S C O R E S'
 
-mainOptions['2,y']=19
-mainOptions['2,x']=18
-mainOptions['2,text']='Q U I T'
+mainOptions['2,y']=17
+mainOptions['2,x']=14
+mainOptions['1,text']='S E T T I N G S'
+
+mainOptions['3,y']=20
+mainOptions['3,x']=18
+mainOptions['3,text']='Q U I T'
 
 read -r -d '' fieldGUI << FIELD_GUI
 ┌────────────────────┬───────────────────┐
@@ -144,10 +148,12 @@ nextPiece['Z,x']=28
 nextPiece['Z,y']=20
 
 # tput civis
-# source ~/Git/Public/Tetris-GNU-Bash-v4/Assets/Tetrominoes
+# source ~/Git/Public/Tetris-GNU-Bash-v4/Assets/Tetrominoes.sh
+# source ~/Git/Public/Tetris-GNU-Bash-v4/Assets/Render.sh
 # tput clear
 # echo "$fieldCLI"
+# inCLI=false
 # for n in I J L O S T Z; do
-#     renderNext $n false
+#     renderNextPiece $n true
 #     read
 # done

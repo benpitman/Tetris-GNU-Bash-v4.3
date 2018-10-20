@@ -1,7 +1,42 @@
+pause()
+{
+    #TODO pause screen needs aligning
+    local unpause
+    # Basic pause screen
+    tput cup 18 21
+    printf '\e[1m PAUSE \e[0m'
+    while read -rsn1 unpause; do
+        [[ "$unpause" == $'\e' ]] && break
+    done
+    tput cup 18 21
+    printf '%7s' ''
+}
+
+levelUp()
+{
+    #TODO level up needs to be on the right
+    (( _level++ ))
+    tput cup 19 21
+    printf "\e[1mLEVEL $_level\e[0m"
+    sleep 2
+    tput cup 19 21
+    printf "         "
+}
+
+renderPiece()
+{
+
+}
+
 navigateMenu()
 {
     local -n menuOptions="$1"
-    local selected=0 m
+    local           \
+        key1        \
+        key2        \
+        key3        \
+        selected=0  \
+        m
 
     while true; do
         for (( m = 0; $m < (${menuOptions[max]} + 1); m++ )); do
@@ -31,7 +66,12 @@ renderMain()
     printf '%s' "$screen"
 
     navigateMenu 'mainOptions'
-    return $?
+    case $? in
+        0)  _state=1;; # New game
+        1)  _state=2;; # Scores
+        3)  _state=3;; # Settings
+        4)  exit 0;
+    esac
 }
 
 renderField()
@@ -46,19 +86,17 @@ renderScreen()
 
     printf '\e[2J\e[1;1H'
 
-    case $1 in
+    case $_state in
         0)  renderMain;;
-        1)  return;;
-        2)  renderField;;
+        1)  renderField;;
+        2)  return;;
         3)  return;;
     esac
-
-    return $?
 }
 
 renderNextPiece()
 {
-    local -n shape="$1"
+    local -n piece="$_nextPiece"
     local                   \
         bit=0               \
         code                \
@@ -66,17 +104,18 @@ renderNextPiece()
         reset=${2:-true}    \
         yAx=0
 
-    $reset && showNext 'R' false
+    $reset && renderNextPiece 'R' false
 
-    echo -e "${colours[$inCLI,$1]}"
 
-    for (( ; $yAx < 4; bit += ${shape[0]}, yAx++ )); do
-        code="${shape[1]:$bit:${shape[0]}}"
+    for (( ; $yAx < 4; bit += ${piece[0]}, yAx++ )); do
+        printf "${colours[$inCLI,$1]}"
+
+        code="${piece[1]:$bit:${piece[0]}}"
         [ -z "$code" ] && continue
 
         code="${code//0/\\u0020\\u0020}"
         code="${code//1/\\u2588\\u2588}"
 
-        printf '\e[%s;%sH%b' $(( ${next[$1,y]} + $yAx )) ${next[$1,x]} "$code"
+        printf '\e[%s;%sH%b' $(( ${nextPiece[$1,y]} + $yAx )) ${nextPiece[$1,x]} "$code"
     done
 }

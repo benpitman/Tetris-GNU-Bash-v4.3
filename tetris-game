@@ -1,0 +1,128 @@
+#!/bin/bash
+
+: <<'TetrisDoc'
+    @Param      bool    1
+        True if script is to be run in terminal mode
+    @Param      bool    2
+        True if script is to be run in debug mode
+TetrisDoc
+
+[ -z "$1" ] && exit 1
+
+# If game is loaded on a terminal outside of a GUI environment
+if $1; then
+    inTTY=false
+else
+    if [ -z "$DISPLAY" ] || [[ "$TERM" == "linux" ]]; then
+        inGUI='X'
+    fi
+    inTTY=true
+fi
+
+logDir=/var/games/tetris
+# Debug mode sends STDERR to an error file
+if $2; then
+    export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+    exec 2>$logDir/debug.log
+    set -x
+else
+    exec 2>$logDir/error.log
+fi
+
+assetPath='Assets/'
+
+source "${assetPath}"*
+
+stty -echo  # Disable echo
+tput civis  # Disable cursor blinker
+
+hsLog="$logDir/highscores.ths"
+touch "$hsLog" # Create score log if doesn't exist
+libDir="/usr/local/lib/tetris"
+
+_state=0
+_level=0
+_score=0
+_lines=0
+_currentPiece=
+_nextPiece=
+
+gameLoop()
+{
+    local           \
+        key1        \
+        key2        \
+        key3        \
+        postTime    \
+        preTime     \
+        readPid     \
+        timeTaken=0
+
+    while true; do
+        if (( $_lines % 10 == 0 )); then
+            levelUp
+            # Clear input buffer
+            read -t 0.0001 -n 10000
+            # Lower numer means faster speed
+            (( speed = (90 - ($_level * 2)) ))
+            (( $speed < 12 )) && speed=12
+        fi
+        if $newPiece; then
+            [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+            _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+            renderPiece
+            renderNextPiece
+        fi
+
+        preTime=$( date '+%2N' | sed 's/^0//' )
+        IFS= read -rsn1 -t0.$(( $speed - $timeTaken )) key1
+        readPid=$?
+        IFS= read -rsn1 -t0.0001 key2
+        IFS= read -rsn1 -t0.0001 key3
+
+        # If read timeout was interrupted
+        if (( $readPid != 142 )); then
+            # If enter or space is pressed
+            if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
+                # Rotate
+            # If escape character is pressed
+            elif [[ "$key1" == $'\e' ]]; then
+                if [ -z "$key2" ]; then
+                    pause
+                fi
+            fi
+        fi
+        postTime=$( date '+%2N' | sed 's/^0//' )
+
+        (( $postTime < $preTime )) && (( postTime += 100 ))
+        if (( $timeTaken )); then
+            (( timeTaken += ($postTime - $preTime) ))
+        else
+            (( timeTaken = ($postTime - $preTime) ))
+        fi
+
+        if (( $timeTaken >= $speed )); then
+            timeTaken=0
+        fi
+        unset key1 key2 key3
+    done
+}
+
+# Set blank global variables to allow restarting
+newGame()
+{
+    # Set level to 0 and then instantly level up
+    _level=0
+    _score=0
+    ScoreModifier false
+    GameLoop
+    return $?
+}
+
+while renderScreen; do
+    case $_state in
+        1)  NewGame;;
+        2)  ;;
+        3)  ;;
+    esac
+done
