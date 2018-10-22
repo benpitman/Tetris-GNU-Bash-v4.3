@@ -78,16 +78,16 @@ read -r -d '' fieldGUI << FIELD_GUI
 │                    ├──╢  S C O R E  ╟──┤
 │                    │  ╚═════════════╝  │
 │                    ╞═══════════════════╡
-│                    │             0     │
+│                    │                   │
 │                    ╞═══════════════════╡
 │                    │                   │
 │                    │  ╔═════════════╗  │
 │                    │  ║  L E V E L  ║  │
-│                    │  ║          0  ║  │
+│                    │  ║             ║  │
 │                    │  ╚═════════════╝  │
 │                    │  ╔═════════════╗  │
 │                    │  ║  L I N E S  ║  │
-│                    │  ║          0  ║  │
+│                    │  ║             ║  │
 │                    │  ╚═════════════╝  │
 │                    │                   │
 │                    │  ╔══════════╗     │
@@ -105,16 +105,16 @@ read -r -d '' fieldCLI << FIELD_CLI
 │                    ├──┤  S C O R E  ├──┤
 │                    │  └─────────────┘  │
 │                    ├───────────────────┤
-│                    │             0     │
+│                    │                   │
 │                    ├───────────────────┤
 │                    │                   │
 │                    │  ┌─────────────┐  │
 │                    │  │  L E V E L  │  │
-│                    │  │          0  │  │
+│                    │  │             │  │
 │                    │  └─────────────┘  │
 │                    │  ┌─────────────┐  │
 │                    │  │  L I N E S  │  │
-│                    │  │          0  │  │
+│                    │  │             │  │
 │                    │  └─────────────┘  │
 │                    │                   │
 │                    │  ┌──────────┐     │
@@ -140,6 +140,10 @@ fieldOptions['lines,x']=28
 fieldOptions['lines,y']=15
 fieldOptions['lines,width']=9
 
+fieldOptions['pause,x']=7
+fieldOptions['pause,y']=12
+fieldOptions['pause,text']='P A U S E'
+
 declare -A nextPiece
 
 # Reset
@@ -160,14 +164,3 @@ nextPiece['T,x']=28
 nextPiece['T,y']=20
 nextPiece['Z,x']=28
 nextPiece['Z,y']=20
-
-# tput civis
-# source ~/Git/Public/Tetris-GNU-Bash-v4/Assets/Tetrominoes.sh
-# source ~/Git/Public/Tetris-GNU-Bash-v4/Assets/Render.sh
-# tput clear
-# echo "$fieldCLI"
-# inCLI=false
-# for n in I J L O S T Z; do
-#     renderNextPiece $n true
-#     read
-# done

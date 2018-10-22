@@ -1,15 +1,12 @@
 pause()
 {
-    #TODO pause screen needs aligning
     local unpause
     # Basic pause screen
-    tput cup 18 21
-    printf '\e[1m PAUSE \e[0m'
+    printf "\e[%s;%sH%s" ${fieldOptions[pause,y]} ${fieldOptions[pause,x]} "${fieldOptions[pause,text]}"
     while read -rsn1 unpause; do
         [[ "$unpause" == $'\e' ]] && break
     done
-    tput cup 18 21
-    printf '%7s' ''
+    printf "\e[%s;%sH%${#fieldOptions[pause,text]}s" ${fieldOptions[pause,y]} ${fieldOptions[pause,x]}
 }
 
 levelUp()
@@ -20,7 +17,20 @@ levelUp()
 
 renderPiece()
 {
-    return
+    local -n piece="$1"
+    local       \
+        coord   \
+        pixel   \
+        x=$2    \
+        xAx     \
+        y=$3    \
+        yAx
+
+    for coord in ${piece[$_rotation]}; do
+        IFS=, read -r xAx yAx <<< "$coord"
+        pixel="${colours[$1]}${block}${block}${colours[R]}"
+        printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$pixel"
+    done
 }
 
 navigateMenu()
@@ -91,27 +101,11 @@ renderScreen()
 
 renderNextPiece()
 {
-    local -n piece="$1"
-    local                   \
-        bit=0               \
-        code                \
-        length              \
-        reset=${2:-true}    \
-        yAx=0
+    local y
 
-    $reset && renderNextPiece 'R' false
-    printf "${colours[$_inTTY,$1]}"
-
-    for (( ; $yAx < 4; bit += ${piece[0]}, yAx++ )); do
-
-        code="${piece[1]:$bit:${piece[0]}}"
-        [ -z "$code" ] && continue
-
-        code="${code//0/\\u0020\\u0020}"
-        code="${code//1/\\u2588\\u2588}"
-
-        printf '\e[%s;%sH%b' $(( ${nextPiece[$1,y]} + $yAx )) ${nextPiece[$1,x]} "$code"
+    for y in {0..3}; do
+        printf '\e[%s;%sH%b' $(( ${nextPiece[R,y]} + $y )) ${nextPiece[R,x]} "${R[0]//0/\\u0020\\u0020}"
     done
 
-    $reset && printf "${colours[reset]}"
+    renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,x]} ${nextPiece[$_nextPiece,y]}
 }

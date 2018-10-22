@@ -30,17 +30,11 @@ logDir=/var/games/tetris
 # Debug mode sends STDERR to an error file
 if $2; then
     export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
-    exec 2>$logDir/debug.log
+    exec 2>~/debug.log
     set -x
 else
     exec 2>$logDir/error.log
 fi
-
-assetPath='Assets/'
-
-for asset in ${assetPath}*; do
-    source "$asset"
-done
 
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
@@ -49,12 +43,19 @@ hsLog="$logDir/highscores.ths"
 touch "$hsLog" # Create score log if doesn't exist
 libDir="/usr/local/lib/tetris"
 
+assetPath='Assets/'
+
+for asset in ${assetPath}*; do
+    source "$asset"
+done
+
 _state=0
 _level=0
 _score=0
 _lines=0
 _currentPiece=
 _nextPiece=
+_rotation=0
 
 gameLoop()
 {
@@ -81,8 +82,8 @@ gameLoop()
         if $newPiece; then
             [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
             _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
-            renderPiece
-            renderNextPiece $_nextPiece
+            renderPiece "$_currentPiece"
+            renderNextPiece
         fi
 
         preTime=$( date '+%2N' | sed 's/^0//' )
