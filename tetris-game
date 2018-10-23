@@ -57,37 +57,60 @@ _currentPiece=
 _nextPiece=
 _rotation=0
 
+
+
 gameLoop()
 {
-    local           \
-        key1        \
-        key2        \
-        key3        \
-        postTime    \
-        preTime     \
-        readPid     \
-        speed       \
-        tick        \
+    local               \
+        direction       \
+        key1            \
+        key2            \
+        key3            \
+        movePiece=false \
+        pieceX          \
+        pieceY          \
+        postTime        \
+        preTime         \
+        readPid         \
+        speed           \
+        tick            \
         timeTaken=0
 
     while true; do
-        if (( $_lines % 10 == 0 )); then
-            levelUp
-            # Clear input buffer
-            read -t 0.0001 -n 10000
-            # Lower numer means faster speed
-            (( speed = (90 - ($_level * 2)) ))
-            (( $speed < 12 )) && speed=12
-        fi
+        # if (( $_lines % 10 == 0 )); then
+        #     levelUp
+        #     # Lower numer means faster speed
+            (( speed = 90 - $_level * 2 ))
+        #     (( $speed < 12 )) && speed=12
+        # fi
         if $newPiece; then
             [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
             _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
-            renderPiece "$_currentPiece"
+
+            # Starting geometry for new pieces
+            _rotation=0
+            pieceY=2
+            pieceX=8
+            renderPiece "$_currentPiece" $pieceY $pieceX
             renderNextPiece
+            newPiece=false
+        fi
+
+        if $movePiece; then
+            removePiece "$_currentPiece" $pieceY $pieceX
+            case $direction in
+                'D')    (( pieceY++ ));;
+                'R')    (( pieceX+=2 ));;
+                'L')    (( pieceX-=2 ));;
+            esac
+            renderPiece "$_currentPiece" $pieceY $pieceX
+            movePiece=false
         fi
 
         preTime=$( date '+%2N' | sed 's/^0//' )
-        tick=$(( $speed - $timeTaken ))
+        (( tick = $speed - $timeTaken ))
+
+        # Read STDIN with the timeout relative to the speed
         IFS= read -rsn1 -t0.$(( $tick < 0 ? 0 : $tick )) key1
         readPid=$?
         IFS= read -rsn1 -t0.0001 key2
@@ -97,11 +120,21 @@ gameLoop()
         if (( $readPid != 142 )); then
             # If enter or space is pressed
             if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
-                : # Rotate
+                removePiece "$_currentPiece" $pieceY $pieceX
+                (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
+                movePiece=true
+                direction='U'
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
                 if [ -z "$key2" ]; then
                     pause
+                else
+                    movePiece=true
+                    case $key3 in
+                        B)  direction='D';; # Down
+                        C)  direction='R';; # Right
+                        D)  direction='L';; # Left
+                    esac
                 fi
             fi
         fi
@@ -109,12 +142,14 @@ gameLoop()
 
         (( $postTime < $preTime )) && (( postTime += 100 ))
         if (( $timeTaken )); then
-            (( timeTaken += ($postTime - $preTime) ))
+            (( timeTaken += $postTime - $preTime ))
         else
-            (( timeTaken = ($postTime - $preTime) ))
+            (( timeTaken = $postTime - $preTime ))
         fi
 
         if (( $timeTaken >= $speed )); then
+            movePiece=true
+            direction='D'
             timeTaken=0
         fi
         unset key1 key2 key3
@@ -124,9 +159,12 @@ gameLoop()
 # Set blank global variables to allow restarting
 newGame()
 {
+    local newPiece=true
+
     # Set level to 0 and then instantly level up
     _level=0
     _score=0
+
     # scoreModifier false
     gameLoop
     return $?

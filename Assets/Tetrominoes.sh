@@ -1,3 +1,4 @@
+blank='\u0020'
 block='\u2588'
 
 declare -A colours

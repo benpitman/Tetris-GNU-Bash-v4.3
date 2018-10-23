@@ -18,19 +18,29 @@ levelUp()
 renderPiece()
 {
     local -n piece="$1"
-    local       \
-        coord   \
-        pixel   \
-        x=$2    \
-        xAx     \
-        y=$3    \
+    local                   \
+        coord               \
+        pixel               \
+        reset=${4:-false}   \
+        x=$3                \
+        xAx                 \
+        y=$2                \
         yAx
 
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
-        pixel="${colours[$1]}${block}${block}${colours[R]}"
+        if $reset; then
+            pixel="${colours[$1]}${blank}${blank}${colours[R]}"
+        else
+            pixel="${colours[$1]}${block}${block}${colours[R]}"
+        fi
         printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$pixel"
     done
+}
+
+removePiece()
+{
+    renderPiece "$1" $2 $3 true
 }
 
 navigateMenu()
@@ -107,5 +117,5 @@ renderNextPiece()
         printf '\e[%s;%sH%b' $(( ${nextPiece[R,y]} + $y )) ${nextPiece[R,x]} "${R[0]//0/\\u0020\\u0020}"
     done
 
-    renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,x]} ${nextPiece[$_nextPiece,y]}
+    renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,y]} ${nextPiece[$_nextPiece,x]}
 }
