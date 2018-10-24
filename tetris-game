@@ -57,23 +57,44 @@ _currentPiece=
 _nextPiece=
 _rotation=0
 
+movePiece()
+{
+    removePiece "$_currentPiece" $pieceY $pieceX
 
+    case $direction in
+        'D')    (( pieceY++ ));;
+        'R')    (( pieceX += 2 ));;
+        'L')    (( pieceX -= 2 ));;
+    esac
+
+    renderPiece "$_currentPiece" $pieceY $pieceX
+}
+
+rotatePiece()
+{
+    removePiece "$_currentPiece" $pieceY $pieceX
+
+    (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
+
+    renderPiece "$_currentPiece" $pieceY $pieceX
+}
 
 gameLoop()
 {
-    local               \
-        direction       \
-        key1            \
-        key2            \
-        key3            \
-        movePiece=false \
-        pieceX          \
-        pieceY          \
-        postTime        \
-        preTime         \
-        readPid         \
-        speed           \
-        tick            \
+    local                       \
+        direction               \
+        key1                    \
+        key2                    \
+        key3                    \
+        updatePosition=false    \
+        newPiece=true           \
+        pieceX                  \
+        pieceY                  \
+        postTime                \
+        preTime                 \
+        readPid                 \
+        speed                   \
+        tick                    \
         timeTaken=0
 
     while true; do
@@ -96,15 +117,9 @@ gameLoop()
             newPiece=false
         fi
 
-        if $movePiece; then
-            removePiece "$_currentPiece" $pieceY $pieceX
-            case $direction in
-                'D')    (( pieceY++ ));;
-                'R')    (( pieceX+=2 ));;
-                'L')    (( pieceX-=2 ));;
-            esac
-            renderPiece "$_currentPiece" $pieceY $pieceX
-            movePiece=false
+        if $updatePosition; then
+            movePiece
+            updatePosition=false
         fi
 
         preTime=$( date '+%2N' | sed 's/^0//' )
@@ -120,16 +135,13 @@ gameLoop()
         if (( $readPid != 142 )); then
             # If enter or space is pressed
             if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
-                removePiece "$_currentPiece" $pieceY $pieceX
-                (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
-                movePiece=true
-                direction='U'
+                rotatePiece
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
                 if [ -z "$key2" ]; then
                     pause
                 else
-                    movePiece=true
+                    updatePosition=true
                     case $key3 in
                         B)  direction='D';; # Down
                         C)  direction='R';; # Right
@@ -148,7 +160,7 @@ gameLoop()
         fi
 
         if (( $timeTaken >= $speed )); then
-            movePiece=true
+            updatePosition=true
             direction='D'
             timeTaken=0
         fi
@@ -159,9 +171,6 @@ gameLoop()
 # Set blank global variables to allow restarting
 newGame()
 {
-    local newPiece=true
-
-    # Set level to 0 and then instantly level up
     _level=0
     _score=0
 

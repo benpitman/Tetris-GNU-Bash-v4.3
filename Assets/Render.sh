@@ -30,7 +30,7 @@ renderPiece()
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
         if $reset; then
-            pixel="${colours[$1]}${blank}${blank}${colours[R]}"
+            pixel="${blank}${blank}"
         else
             pixel="${colours[$1]}${block}${block}${colours[R]}"
         fi
