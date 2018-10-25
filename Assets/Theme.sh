@@ -23,11 +23,13 @@ Bb5=$As5
 B5='987.77'
 
 lShort='250'
-lLong='720'
-lBreak='870'
-dBreak='620'
-dLong='310'
-dShort='155'
+lLong='400'
+lBreak='480'
+lStride='800'
+dShort='150'
+dLong='320'
+dBreak='600'
+dStride='850'
 
 stage1()
 {
@@ -49,7 +51,7 @@ stage1()
         -nf $E5 -l $lShort -D $dShort   \
         -nf $C5 -l $lShort -D $dShort   \
         -nf $A4 -l $lShort -D $dShort   \
-        -nf $A4 -l $lShort -D $dBreak   \
+        -nf $A4 -l $lShort -D $lStride  \
         -nf $D5 -l $lShort -D $dShort   \
         -nf $F5                         \
         -nf $A5 -l $lShort -D $dShort   \
@@ -72,22 +74,22 @@ stage1()
 
 stage2()
 {
-    beep -f $E5 -l $lBreak              \
-        -nf $C5 -l $lBreak              \
-        -nf $D5 -l $lBreak              \
-        -nf $B4 -l $lBreak              \
-        -nf $C5 -l $lBreak              \
-        -nf $A4 -l $lBreak              \
-        -nf $Ab4 -l $lBreak             \
-        -nf $B4 -l $lBreak              \
-        -nf $E5 -l $lBreak              \
-        -nf $C5 -l $lBreak              \
-        -nf $D5 -l $lBreak              \
-        -nf $B4 -l $lBreak              \
+    beep -f $E5 -l $lStride             \
+        -nf $C5 -l $lStride             \
+        -nf $D5 -l $lStride             \
+        -nf $B4 -l $lStride             \
+        -nf $C5 -l $lStride             \
+        -nf $A4 -l $lStride             \
+        -nf $Ab4 -l $lStride            \
+        -nf $B4 -l $lBreak -D $dLong    \
+        -nf $E5 -l $lStride             \
+        -nf $C5 -l $lStride             \
+        -nf $D5 -l $lStride             \
+        -nf $B4 -l $lStride             \
         -nf $C5 -l $lLong               \
         -nf $E5 -l $lLong               \
-        -nf $A5 -l $lBreak              \
-        -nf $Ab5 -l $lBreak -D $dBreak
+        -nf $A5 -l $lStride             \
+        -nf $Ab5 -l $lStride -D $dStride
 }
 
 while true; do
@@ -95,18 +97,3 @@ while true; do
     stage1
     stage2
 done
-
-:<<THEME
-    https://pages.mtu.edu/~suits/notefreqs.html
-    https://www.piano-keyboard-guide.com/how-to-play-the-tetris-theme-song-easy-piano-tutorial-korobeiniki/
-
-    E B C D C B A
-    A C E D C B
-    C D E C A A
-    D F A G F E
-    C E D C B
-    B C D E C A A
-
-    E C D B C A Ab B
-    E C D B C E A Ab
-THEME
