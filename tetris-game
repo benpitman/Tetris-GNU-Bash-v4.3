@@ -55,41 +55,84 @@ _score=0
 _lines=0
 _currentPiece=
 _nextPiece=
-_rotation=0
+_rotation=
+_pieceX=
+_pieceY=
+
+# Collision detection
+declare -A _lock
 
 movePiece()
 {
-    removePiece "$_currentPiece" $pieceY $pieceX
+    local               \
+        nextX=$_pieceX  \
+        nextY=$_pieceY
 
     case $direction in
-        'D')    (( pieceY++ ));;
-        'R')    (( pieceX += 2 ));;
-        'L')    (( pieceX -= 2 ));;
+        'D')    (( nextY++ ));;
+        'R')    (( nextX += 2 ));;
+        'L')    (( nextX -= 2 ));;
     esac
 
-    renderPiece "$_currentPiece" $pieceY $pieceX
+    canRender "$_currentPiece" $nextY $nextX
+    if (( $collide == 0 )); then
+        removePiece "$_currentPiece" $_pieceY $_pieceX
+        renderPiece "$_currentPiece" $nextY $nextX
+        _pieceX=$nextX
+        _pieceY=$nextY
+    elif [[ "$direction" == 'D' ]]; then
+        lockPiece "$_currentPiece" $_pieceY $_pieceX
+        newPiece=true
+    fi
 }
 
 rotatePiece()
 {
-    removePiece "$_currentPiece" $pieceY $pieceX
+    local                           \
+        captureRotation=$_rotation  \
+        posX=$_pieceX               \
+        posY=$_pieceY
+
+    removePiece "$_currentPiece" $_pieceY $_pieceX
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
-    renderPiece "$_currentPiece" $pieceY $pieceX
+    while ! canRender "$_currentPiece" $posY $posX; do
+        case $collide in
+            1)      (( posX -= 2 ));; # Right wall
+            3)      (( posX += 2 ));; # Left wall
+            2|4)    _rotation=$captureRotation
+                    break;; # Floor or another tetromino
+        esac
+    done
+    _pieceX=$posX
+    _pieceY=$posY
+
+    renderPiece "$_currentPiece" $_pieceY $_pieceX
+}
+
+setDefaults()
+{
+    [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+    _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+
+    # Starting geometry for new pieces
+    _rotation=0
+    _pieceY=2
+    _pieceX=8
+    newPiece=false
 }
 
 gameLoop()
 {
     local                       \
+        collide=0               \
         direction               \
         key1                    \
         key2                    \
         key3                    \
         updatePosition=false    \
         newPiece=true           \
-        pieceX                  \
-        pieceY                  \
         postTime                \
         preTime                 \
         readPid                 \
@@ -102,22 +145,15 @@ gameLoop()
         #     levelUp
         #     # Lower numer means faster speed
             (( speed = 90 - $_level * 2 ))
-        #     (( $speed < 12 )) && speed=12
+        #     (( $speed < 20 )) && speed=20
         # fi
         if $newPiece; then
-            [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
-            _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
-
-            # Starting geometry for new pieces
-            _rotation=0
-            pieceY=2
-            pieceX=8
-            renderPiece "$_currentPiece" $pieceY $pieceX
+            setDefaults
+            canRender "$_currentPiece" $_pieceY $_pieceX
+            (( $collide )) && : # Game Over
+            renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
-            newPiece=false
-        fi
-
-        if $updatePosition; then
+        elif $updatePosition; then
             movePiece
             updatePosition=false
         fi
@@ -173,6 +209,7 @@ newGame()
 {
     _level=0
     _score=0
+    eval _lock[{2..23},{2..18..2}]=0
 
     # scoreModifier false
     gameLoop
@@ -183,7 +220,7 @@ while true; do
     case $_state in
         *)  renderScreen;;&
         1)  newGame;;
-        2)  ;;
-        3)  ;;
+        2)  break;;
+        3)  break;;
     esac
 done

@@ -1,36 +1,3 @@
-Gs4='415.30'
-Ab4=$Gs4
-A4='440.00'
-As4='466.16'
-Bb4=$As
-B4='493.88'
-C5='523.25'
-Cs5='554.37'
-Db5=$Cs5
-D5='587.33'
-Ds5='622.25'
-Eb5=$Ds5
-E5='659.25'
-F5='698.46'
-Fs5='739.99'
-Gb5=$Fs5
-G5='783.99'
-Gs5='830.61'
-Ab5=$Gs5
-A5='880.00'
-As5='932.33'
-Bb5=$As5
-B5='987.77'
-
-lShort='250'
-lLong='400'
-lBreak='480'
-lStride='800'
-dShort='150'
-dLong='320'
-dBreak='600'
-dStride='850'
-
 stage1()
 {
     beep -f $E5 -l $lShort -D $dShort   \
@@ -92,8 +59,31 @@ stage2()
         -nf $Ab5 -l $lStride -D $dStride
 }
 
-while true; do
-    stage1
-    stage1
-    stage2
-done
+playTheme()
+{
+    local               \
+        Ab4='415.30'    \
+        A4='440.00'     \
+        B4='493.88'     \
+        C5='523.25'     \
+        D5='587.33'     \
+        E5='659.25'     \
+        F5='698.46'     \
+        G5='783.99'     \
+        Ab5='830.61'    \
+        A5='880.00'     \
+        lShort='250'    \
+        lLong='400'     \
+        lBreak='480'    \
+        lStride='800'   \
+        dShort='150'    \
+        dLong='320'     \
+        dBreak='600'    \
+        dStride='850'
+
+    while true; do
+        stage1
+        stage1
+        stage2
+    done
+}

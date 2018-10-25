@@ -15,6 +15,62 @@ levelUp()
     printf "\e[%s;%sH%${fieldOptions[level,width]}s" ${fieldOptions[level,y]} ${fieldOptions[level,x]} $_level
 }
 
+lockPiece()
+{
+    local -n piece="$1"
+    local                   \
+        coord               \
+        x=$3                \
+        xAx                 \
+        y=$2                \
+        yAx
+
+    for coord in ${piece[$_rotation]}; do
+        IFS=, read -r xAx yAx <<< "$coord"
+        _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=1
+    done
+}
+
+canRender()
+{
+    local -n piece="$1"
+    local                   \
+        coord               \
+        x=$3                \
+        xAx                 \
+        y=$2                \
+        yAx
+
+    for coord in ${piece[$_rotation]}; do
+        IFS=, read -r xAx yAx <<< "$coord"
+        (( xAx = $x + ($xAx * 2) ))
+
+        if (( $xAx > 20 )); then
+            collide=1
+            return 1
+        fi
+
+        if (( $xAx < 2 )); then
+            collide=3
+            return 1
+        fi
+
+        (( yAx = $y + $yAx ))
+
+        if (( $yAx > 23 )); then
+            collide=2
+            return 1
+        fi
+        if (( ${_lock[$yAx,$xAx]} )); then
+            collide=4
+            return 1
+        fi
+    done
+
+    collide=0
+    return 0
+}
+
 renderPiece()
 {
     local -n piece="$1"
