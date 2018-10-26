@@ -44,30 +44,25 @@ canRender()
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
         (( xAx = $x + ($xAx * 2) ))
-
-        if (( $xAx > 20 )); then
-            collide=1
-            return 1
-        fi
-
-        if (( $xAx < 2 )); then
-            collide=3
-            return 1
-        fi
-
         (( yAx = $y + $yAx ))
 
-        if (( $yAx > 23 )); then
-            collide=2
-            return 1
-        fi
+        # Needs to check tetromino collision first for rotation
         if (( ${_lock[$yAx,$xAx]} )); then
-            collide=4
+            collides=4
+            return 1
+        elif (( $xAx > 20 )); then
+            collides=1
+            return 1
+        elif (( $xAx < 2 )); then
+            collides=3
+            return 1
+        elif (( $yAx > 23 )); then
+            collides=2
             return 1
         fi
     done
 
-    collide=0
+    collides=0
     return 0
 }
 

@@ -16,6 +16,11 @@ trap extrap EXIT
 
 [ -z "$1" ] && exit 1
 
+log()
+{
+    printf '\n%s:' "$*" 1>&2
+}
+
 # If game is loaded on a terminal outside of a GUI environment
 if $1; then
     _inTTY=true
@@ -28,8 +33,10 @@ fi
 
 logDir=/var/games/tetris
 # Debug mode sends STDERR to an error file
-if $2; then
-    export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+_debug=${2:-false}
+
+if $_debug; then
     exec 2>~/debug.log
     set -x
 else
@@ -69,13 +76,15 @@ movePiece()
         nextY=$_pieceY
 
     case $direction in
-        'D')    (( nextY++ ));;
+        'D')    timeTaken=0 # Reset timer
+                (( nextY++ ));;
         'R')    (( nextX += 2 ));;
         'L')    (( nextX -= 2 ));;
     esac
 
     canRender "$_currentPiece" $nextY $nextX
-    if (( $collide == 0 )); then
+
+    if (( $collides == 0 )); then
         removePiece "$_currentPiece" $_pieceY $_pieceX
         renderPiece "$_currentPiece" $nextY $nextX
         _pieceX=$nextX
@@ -98,13 +107,15 @@ rotatePiece()
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
     while ! canRender "$_currentPiece" $posY $posX; do
-        case $collide in
+        case $collides in
             1)      (( posX -= 2 ));; # Right wall
             3)      (( posX += 2 ));; # Left wall
             2|4)    _rotation=$captureRotation
-                    break;; # Floor or another tetromino
+                    renderPiece "$_currentPiece" $_pieceY $_pieceX
+                    return;; # Floor or another tetromino
         esac
     done
+
     _pieceX=$posX
     _pieceY=$posY
 
@@ -126,7 +137,7 @@ setDefaults()
 gameLoop()
 {
     local                       \
-        collide=0               \
+        collides=0              \
         direction               \
         key1                    \
         key2                    \
@@ -147,22 +158,28 @@ gameLoop()
             (( speed = 90 - $_level * 2 ))
         #     (( $speed < 20 )) && speed=20
         # fi
+
         if $newPiece; then
             setDefaults
             canRender "$_currentPiece" $_pieceY $_pieceX
-            (( $collide )) && : # Game Over
+            (( $collides )) && : # Game Over
             renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
         elif $updatePosition; then
+            # $_debug && log "move"
             movePiece
             updatePosition=false
         fi
 
-        preTime=$( date '+%2N' | sed 's/^0//' )
+        preTime=$( date '+%2N' )
+        preTime=${preTime#0}
+
         (( tick = $speed - $timeTaken ))
+        (( $tick < 0 )) && tick=0
+        (( $tick < 10 )) && tick="0$tick"
 
         # Read STDIN with the timeout relative to the speed
-        IFS= read -rsn1 -t0.$(( $tick < 0 ? 0 : $tick )) key1
+        IFS= read -rsn1 -t0.$tick key1
         readPid=$?
         IFS= read -rsn1 -t0.0001 key2
         IFS= read -rsn1 -t0.0001 key3
@@ -171,6 +188,7 @@ gameLoop()
         if (( $readPid != 142 )); then
             # If enter or space is pressed
             if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
+                # $_debug && log "rotate"
                 rotatePiece
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
@@ -186,7 +204,9 @@ gameLoop()
                 fi
             fi
         fi
-        postTime=$( date '+%2N' | sed 's/^0//' )
+
+        postTime=$( date '+%2N' )
+        postTime=${postTime#0}
 
         (( $postTime < $preTime )) && (( postTime += 100 ))
         if (( $timeTaken )); then
