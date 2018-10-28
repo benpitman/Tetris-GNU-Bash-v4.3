@@ -15,20 +15,59 @@ levelUp()
     printf "\e[%s;%sH%${fieldOptions[level,width]}s" ${fieldOptions[level,y]} ${fieldOptions[level,x]} $_level
 }
 
+lineUp()
+{
+    (( ++_lines % 10 == 0 )) && levelUp
+    printf "\e[%s;%sH%${fieldOptions[lines,width]}s" ${fieldOptions[lines,y]} ${fieldOptions[lines,x]} $_lines
+}
+
+destroyLines()
+{
+    for line in $*; do
+        lineUp
+    done
+}
+
+checkLines()
+{
+    local               \
+        line            \
+        toDestroy=()    \
+        xPos            \
+        yPos
+
+    for yPos in $*; do
+        line=true
+        for xPos in {2..20..2}; do
+            if ! (( ${_lock[$yPos,$xPos]} )); then
+                line=false
+                break
+            fi
+        done
+        $line && toDestroy+=( $yPos )
+    done
+
+    (( ${#toDestroy[@]} )) && destroyLines "${toDestroy[@]}"
+}
+
 lockPiece()
 {
     local -n piece="$1"
-    local                   \
-        coord               \
-        x=$3                \
-        xAx                 \
-        y=$2                \
+    local           \
+        coord       \
+        toCheck=()  \
+        x=$3        \
+        xAx         \
+        y=$2        \
         yAx
 
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
+        toCheck[(( $y + $yAx ))]=1 # Save as keys to avoid duplicates
         _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=1
     done
+
+    checkLines "${!toCheck[@]}"
 }
 
 canRender()

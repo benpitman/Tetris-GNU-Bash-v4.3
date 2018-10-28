@@ -35,7 +35,7 @@ _debug=${1:-false}
 
 if $_debug; then
     exec 2>~/debug.log
-    set -x
+    # set -x
 else
     exec 2>$logDir/error.log
 fi
@@ -149,12 +149,9 @@ gameLoop()
         timeTaken=0
 
     while true; do
-        # if (( $_lines % 10 == 0 )); then
-        #     levelUp
-        #     # Lower numer means faster speed
-            (( speed = 90 - $_level * 2 ))
-        #     (( $speed < 20 )) && speed=20
-        # fi
+        # Lower numer means faster speed
+        (( speed = 90 - $_level * 2 ))
+        (( $speed < 20 )) && speed=20
 
         if $newPiece; then
             setDefaults
@@ -226,7 +223,7 @@ newGame()
 {
     _level=0
     _score=0
-    eval _lock[{2..23},{2..18..2}]=0
+    eval _lock[{2..23},{2..20..2}]=0
 
     # scoreModifier false
     gameLoop
