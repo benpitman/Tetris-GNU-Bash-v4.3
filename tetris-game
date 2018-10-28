@@ -14,27 +14,24 @@ extrap()
 }
 trap extrap EXIT
 
-[ -z "$1" ] && exit 1
-
 log()
 {
     printf '\n%s:' "$*" 1>&2
 }
 
 # If game is loaded on a terminal outside of a GUI environment
-if $1; then
+if test -z "$DISPLAY" || [[ "$TERM" == "linux" ]]; then
     _inTTY=true
+    _colourMode='TTY'
 else
-    if [ -z "$DISPLAY" ] || [[ "$TERM" == "linux" ]]; then
-        _inTTY=true
-    fi
     _inTTY=false
+    _colourMode='GUI'
 fi
 
 logDir=/var/games/tetris
 # Debug mode sends STDERR to an error file
 export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
-_debug=${2:-false}
+_debug=${1:-false}
 
 if $_debug; then
     exec 2>~/debug.log
@@ -124,7 +121,7 @@ rotatePiece()
 
 setDefaults()
 {
-    [ -n "$_nextPiece" ] && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+    test -n "$_nextPiece" && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
     _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
 
     # Starting geometry for new pieces
@@ -187,12 +184,12 @@ gameLoop()
         # If read timeout was interrupted
         if (( $readPid != 142 )); then
             # If enter or space is pressed
-            if [ -z "$key1" ] || [[ "$key1" == " " ]]; then
+            if test -z "$key1" || [[ "$key1" == " " ]]; then
                 # $_debug && log "rotate"
                 rotatePiece
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
-                if [ -z "$key2" ]; then
+                if test -z "$key2"; then
                     pause
                 else
                     updatePosition=true

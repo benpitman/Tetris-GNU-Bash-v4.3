@@ -1,4 +1,5 @@
-read -r -d '' mainGUI << MAIN_GUI
+if $_inTTY; then
+    read -r -d '' mainScreen << ____MAIN_GUI
 ┌────────────────────────────────────────┐
 │┌──────────────────────────────────────┐│
 ││ █▛██▜█ ██ ▜█ █▛██▜█ ██ █▙  ██  ▟▙ ▜█ ││
@@ -23,9 +24,9 @@ read -r -d '' mainGUI << MAIN_GUI
 │                                        │
 │                           © Ben Pitman │
 └────────────────────────────────────────┘
-MAIN_GUI
-
-read -r -d '' mainCLI << MAIN_CLI
+____MAIN_GUI
+else
+    read -r -d '' mainScreen << ____MAIN_CLI
 ┌────────────────────────────────────────┐
 │┌──────────────────────────────────────┐│
 ││ ██████ █████ ██████ █████  ██  █████ ││
@@ -50,29 +51,31 @@ read -r -d '' mainCLI << MAIN_CLI
 │                                        │
 │                           © Ben Pitman │
 └────────────────────────────────────────┘
-MAIN_CLI
+____MAIN_CLI
+fi
 
-declare -A mainOptions
+declare -A mainOptions=(
+    ['max']=3
 
-mainOptions['max']=3
+    ['0,y']=11
+    ['0,x']=14
+    ['0,text']='N E W   G A M E'
 
-mainOptions['0,y']=11
-mainOptions['0,x']=14
-mainOptions['0,text']='N E W   G A M E'
+    ['1,y']=14
+    ['1,x']=16
+    ['1,text']='S C O R E S'
 
-mainOptions['1,y']=14
-mainOptions['1,x']=16
-mainOptions['1,text']='S C O R E S'
+    ['2,y']=17
+    ['2,x']=14
+    ['2,text']='S E T T I N G S'
 
-mainOptions['2,y']=17
-mainOptions['2,x']=14
-mainOptions['2,text']='S E T T I N G S'
+    ['3,y']=20
+    ['3,x']=18
+    ['3,text']='Q U I T'
+)
 
-mainOptions['3,y']=20
-mainOptions['3,x']=18
-mainOptions['3,text']='Q U I T'
-
-read -r -d '' fieldGUI << FIELD_GUI
+if ! $_inTTY; then
+    read -r -d '' fieldScreen << ____FIELD_GUI
 ┌────────────────────┬───────────────────┐
 │                    │  ╔═════════════╗  │
 │                    ├──╢  S C O R E  ╟──┤
@@ -97,9 +100,9 @@ read -r -d '' fieldGUI << FIELD_GUI
 │                    │  ║          ║     │
 │                    │  ╚══════════╝     │
 └────────────────────┴───────────────────┘
-FIELD_GUI
-
-read -r -d '' fieldCLI << FIELD_CLI
+____FIELD_GUI
+else
+    read -r -d '' fieldScreen << ____FIELD_CLI
 ┌────────────────────┬───────────────────┐
 │                    │  ┌─────────────┐  │
 │                    ├──┤  S C O R E  ├──┤
@@ -124,45 +127,51 @@ read -r -d '' fieldCLI << FIELD_CLI
 │                    │  │          │     │
 │                    │  └──────────┘     │
 └────────────────────┴───────────────────┘
-FIELD_CLI
+____FIELD_CLI
+fi
 
 startPosition='2,8'
 
-declare -A fieldOptions
+declare -A fieldOptions=(
+    ['score,x']=28
+    ['score,y']=6
+    ['score,width']=9
 
-fieldOptions['score,x']=28
-fieldOptions['score,y']=6
-fieldOptions['score,width']=9
+    ['level,x']=28
+    ['level,y']=11
+    ['level,width']=9
 
-fieldOptions['level,x']=28
-fieldOptions['level,y']=11
-fieldOptions['level,width']=9
+    ['lines,x']=28
+    ['lines,y']=15
+    ['lines,width']=9
 
-fieldOptions['lines,x']=28
-fieldOptions['lines,y']=15
-fieldOptions['lines,width']=9
+    ['pause,x']=28
+    ['pause,y']=8
+    ['pause,text']='P A U S E'
+)
 
-fieldOptions['pause,x']=7
-fieldOptions['pause,y']=12
-fieldOptions['pause,text']='P A U S E'
+declare -A nextPiece=(
+    ['R,x']=26  # Reset
+    ['R,y']=19
 
-declare -A nextPiece
+    ['I,x']=27
+    ['I,y']=19
 
-# Reset
-nextPiece['R,x']=26
-nextPiece['R,y']=19
+    ['J,x']=28
+    ['J,y']=20
 
-nextPiece['I,x']=27
-nextPiece['I,y']=19
-nextPiece['J,x']=28
-nextPiece['J,y']=20
-nextPiece['L,x']=28
-nextPiece['L,y']=20
-nextPiece['O,x']=29
-nextPiece['O,y']=20
-nextPiece['S,x']=28
-nextPiece['S,y']=20
-nextPiece['T,x']=28
-nextPiece['T,y']=20
-nextPiece['Z,x']=28
-nextPiece['Z,y']=20
+    ['L,x']=28
+    ['L,y']=20
+
+    ['O,x']=29
+    ['O,y']=20
+
+    ['S,x']=28
+    ['S,y']=20
+
+    ['T,x']=28
+    ['T,y']=20
+
+    ['Z,x']=28
+    ['Z,y']=20
+)

@@ -1,36 +1,62 @@
 blank='\u0020'
 block='\u2588'
+colours=()
 
-declare -A colours
+setColours()
+{
+    case $_colourMode in
+        'TTY')
+            colours=(
+                [0]=$'\e[0m'        # Default
+                [1]=$'\e[38;5;27m'  # Blue
+                [2]=$'\e[38;5;128m' # Purple
+                [3]=$'\e[38;5;178m' # Yellow
+                [4]=$'\e[38;5;76m'  # Green
+                [5]=$'\e[38;5;43m'  # Cyan
+                [6]=$'\e[38;5;205m' # Pink
+                [7]=$'\e[38;5;160m' # Red
+            )
+        ;;
+        'GUI')
+            colours=(
+                [0]=$'\e[0m'        # Default
+                [1]=$'\e[38;5;43m'  # Cyan
+                [2]=$'\e[38;5;27m'  # Blue
+                [3]=$'\e[38;5;166m' # Orange
+                [4]=$'\e[38;5;178m' # Yellow
+                [5]=$'\e[38;5;76m'  # Green
+                [6]=$'\e[38;5;128m' # Purple
+                [7]=$'\e[38;5;160m' # Red
+            )
+        ;;
+        'NOIR')
+            colours=(
+                [0]=$'\e[0;37;7m'   # Inverted white
+                [1]=$'\e[0;37;7m'
+                [2]=$'\e[0;37;7m'
+                [3]=$'\e[0;37;7m'
+                [4]=$'\e[0;37;7m'
+                [5]=$'\e[0;37;7m'
+                [6]=$'\e[0;37;7m'
+                [7]=$'\e[0;37;7m'
+            )
+        ;;
+    esac
+}
 
-colours['reset']=$'\e[0m'
-colours['white']=$'\e[0;37m'
-
-colours[R]=$'\e[0m'  # Default
-
-if ! $_inTTY; then
-    # GUI
-    colours[I]=$'\e[38;5;43m'    # Cyan
-    colours[J]=$'\e[38;5;27m'    # Blue
-    colours[L]=$'\e[38;5;166m'   # Orange
-    colours[O]=$'\e[38;5;178m'   # Yellow
-    colours[S]=$'\e[38;5;76m'    # Green
-    colours[T]=$'\e[38;5;128m'   # Purple
-    colours[Z]=$'\e[38;5;160m'   # Red
-else
-    # CLI
-    colours[I]=$'\e[38;5;27m'    # Blue
-    colours[J]=$'\e[38;5;128m'   # Purple
-    colours[L]=$'\e[38;5;178m'   # Yellow
-    colours[O]=$'\e[38;5;76m'    # Green
-    colours[S]=$'\e[38;5;43m'    # Cyan
-    colours[T]=$'\e[38;5;205m'   # Pink
-    colours[Z]=$'\e[38;5;160m'   # Red
-fi
+declare -A coloursLookup=(
+    [R]=0
+    [I]=1
+    [J]=2
+    [L]=3
+    [O]=4
+    [S]=5
+    [T]=6
+    [Z]=7
+)
 
 pieces=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
 
-# TODO restructure these so read is not needed
 I=(
     '0,1 1,1 2,1 3,1'
     '2,0 2,1 2,2 2,3'

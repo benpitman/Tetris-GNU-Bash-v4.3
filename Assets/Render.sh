@@ -50,13 +50,13 @@ canRender()
         if (( ${_lock[$yAx,$xAx]} )); then
             collides=4
             return 1
-        elif (( $xAx > 20 )); then
+        elif (( $xAx > 20 )); then # Right wall
             collides=1
             return 1
-        elif (( $xAx < 2 )); then
+        elif (( $xAx < 2 )); then # Left wall
             collides=3
             return 1
-        elif (( $yAx > 23 )); then
+        elif (( $yAx > 23 )); then # Floor
             collides=2
             return 1
         fi
@@ -70,6 +70,7 @@ renderPiece()
 {
     local -n piece="$1"
     local                   \
+        colour              \
         coord               \
         pixel               \
         reset=${4:-false}   \
@@ -83,7 +84,8 @@ renderPiece()
         if $reset; then
             pixel="${blank}${blank}"
         else
-            pixel="${colours[$1]}${block}${block}${colours[R]}"
+            colour=${coloursLookup[$1]}
+            pixel="${colours[$colour]}${block}${block}${colours[0]}"
         fi
         printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$pixel"
     done
@@ -115,7 +117,7 @@ navigateMenu()
         IFS= read -srn 1 -t 0.001 key2
         IFS= read -srn 1 -t 0.001 key3
 
-        [ -z "$key1" ] && break
+        test -z "$key1" && break
 
         case $key3 in
             A)  (( $selected == 0 ? selected = ${menuOptions[max]} : selected-- ));; # Up
@@ -128,8 +130,7 @@ navigateMenu()
 
 renderMain()
 {
-    $_inTTY && screen="$mainCLI" || screen="$mainGUI"
-    printf '%s' "$screen"
+    printf '%s' "$mainScreen"
 
     navigateMenu 'mainOptions'
     case $? in
@@ -142,15 +143,15 @@ renderMain()
 
 renderField()
 {
-    $_inTTY && screen="$fieldCLI" || screen="$fieldGUI"
-    printf '%s' "$screen"
+    printf '%s' "$fieldScreen"
 }
 
 renderScreen()
 {
     local screen=''
 
-    printf '\e[2J\e[1;1H'
+    printf '\e[2J\e[1;1H%s' "${colours[0]}"
+    setColours
 
     case $_state in
         0)  renderMain;;
