@@ -17,14 +17,58 @@ levelUp()
 
 lineUp()
 {
-    (( ++_lines % 10 == 0 )) && levelUp
+    local l
+
+    for (( l = 0; l < $1; l++ )); do
+        (( ++_lines % 10 == 0 )) && levelUp
+    done
+
     printf "\e[%s;%sH%${fieldOptions[lines,width]}s" ${fieldOptions[lines,y]} ${fieldOptions[lines,x]} $_lines
 }
 
 destroyLines()
 {
-    for line in $*; do
-        lineUp
+    local           \
+        cleanPid    \
+        colour      \
+        offset=1    \
+        pixelType   \
+        xPlus       \
+        xPos        \
+        yPlus       \
+        yPos        \
+        zeroes=0
+
+    for pixelType in block blank; do
+        for xPos in {2..20..2}; do
+            for yPos in $*; do
+                printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${!pixelType}${colours[${coloursLookup[R]}]}"
+            done
+            sleep 0.02
+        done
+        sleep 0.04
+    done
+
+    for (( yPlus = ${@: -1} - 1; yPlus > 1; yPlus-- )); do
+        (( $zeroes == 10 )) && break || zeroes=0
+
+        if [[ " $@ " =~ " $yPlus " ]]; then
+            (( offset++ ))
+            continue
+        fi
+
+        #BUG still not 100% functional but will work for a short period
+        for xPlus in {2..20..2}; do
+            colour=${_lock[$yPlus,$xPlus]}
+            if (( $colour )); then
+                printf '\e[%s;%sH%b' $yPlus $xPlus "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
+                printf '\e[%s;%sH%b' $(( $yPlus + $offset )) $xPlus "${colours[$colour]}${block}${colours[${coloursLookup[R]}]}"
+                _lock[$yPlus,$xPlus]=0
+            else
+                (( zeroes++ ))
+            fi
+            _lock[$(( $yPlus + $offset )),$xPlus]=$colour
+        done
     done
 }
 
@@ -48,6 +92,7 @@ checkLines()
     done
 
     (( ${#toDestroy[@]} )) && destroyLines "${toDestroy[@]}"
+    lineUp ${#toDestroy[@]}
 }
 
 lockPiece()
@@ -64,7 +109,7 @@ lockPiece()
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
         toCheck[(( $y + $yAx ))]=1 # Save as keys to avoid duplicates
-        _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=1
+        _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=${coloursLookup[$1]}
     done
 
     checkLines "${!toCheck[@]}"
@@ -109,7 +154,6 @@ renderPiece()
 {
     local -n piece="$1"
     local                   \
-        colour              \
         coord               \
         pixel               \
         reset=${4:-false}   \
@@ -121,10 +165,9 @@ renderPiece()
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
         if $reset; then
-            pixel="${blank}${blank}"
+            pixel="${blank}"
         else
-            colour=${coloursLookup[$1]}
-            pixel="${colours[$colour]}${block}${block}${colours[0]}"
+            pixel="${colours[${coloursLookup[$1]}]}${block}${colours[${coloursLookup[R]}]}"
         fi
         printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$pixel"
     done

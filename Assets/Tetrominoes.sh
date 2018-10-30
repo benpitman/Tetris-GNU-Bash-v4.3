@@ -1,5 +1,5 @@
-blank='\u0020'
-block='\u2588'
+blank='\u0020\u0020'
+block='\u2588\u2588'
 colours=()
 
 setColours()
@@ -15,6 +15,7 @@ setColours()
                 [5]=$'\e[38;5;43m'  # Cyan
                 [6]=$'\e[38;5;205m' # Pink
                 [7]=$'\e[38;5;160m' # Red
+                [8]=$'\e[0;37m'
             )
         ;;
         'GUI')
@@ -27,6 +28,7 @@ setColours()
                 [5]=$'\e[38;5;76m'  # Green
                 [6]=$'\e[38;5;128m' # Purple
                 [7]=$'\e[38;5;160m' # Red
+                [8]=$'\e[0;37m'
             )
         ;;
         'NOIR')
@@ -39,13 +41,14 @@ setColours()
                 [5]=$'\e[0;37;7m'
                 [6]=$'\e[0;37;7m'
                 [7]=$'\e[0;37;7m'
+                [8]=$'\e[0;37;7m'
             )
         ;;
     esac
 }
 
 declare -A coloursLookup=(
-    [R]=0
+    [R]=0   # Reset
     [I]=1
     [J]=2
     [L]=3
@@ -53,6 +56,7 @@ declare -A coloursLookup=(
     [S]=5
     [T]=6
     [Z]=7
+    [W]=8   # White
 )
 
 pieces=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
