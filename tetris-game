@@ -2,17 +2,16 @@
 
 : <<'TetrisDoc'
     @Param      bool    1
-        True if script is to be run in terminal mode
-    @Param      bool    2
         True if script is to be run in debug mode
 TetrisDoc
 
 extrap()
 {
-    stty echo
+    stty sane <&6
     tput cvvis
     tput sgr0
-    printf '\e[24;1H'
+    printf '\e[25;1H'
+    exec 0<&6 6<&-
 }
 trap extrap EXIT
 
@@ -37,12 +36,14 @@ _debug=${1:-false}
 
 if $_debug; then
     exec 2>~/debug.log
-    set -x
+    set -xT
 else
     exec 2>$logDir/error.log
 fi
 
-stty -echo  # Disable echo
+exec 6<&0 0</dev/null
+
+stty -echo <&6  # Disable echo
 tput civis  # Disable cursor blinker
 
 hsLog="$logDir/highscores.ths"
@@ -151,35 +152,36 @@ gameLoop()
         timeTaken=0
 
     while true; do
-        # Lower numer means faster speed
-        (( speed = 90 - $_level * 2 ))
-        (( $speed < 20 )) && speed=20
-
         if $newPiece; then
             setDefaults
             canRender "$_currentPiece" $_pieceY $_pieceX
             (( $collides )) && : # Game Over
             renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
-            read -n10000 -t0.0001 # Clear input buffer
+            read -n10000 -t0.0001 <&6 # Clear input buffer
         elif $updatePosition; then
             # $_debug && log "move"
             movePiece
             updatePosition=false
+            $newPiece && continue
         fi
 
         preTime=$( date '+%2N' )
         preTime=${preTime#0}
+
+        # Lower numer means faster speed
+        (( speed = 90 - $_level * 4 ))
+        (( $speed < 20 )) && speed=20
 
         (( tick = $speed - $timeTaken ))
         (( $tick < 0 )) && tick=0
         (( $tick < 10 )) && tick="0$tick"
 
         # Read STDIN with the timeout relative to the speed
-        IFS= read -rsn1 -t0.$tick key1
+        IFS= read -rsn1 -t0.$tick key1 <&6
         readPid=$?
-        IFS= read -rsn1 -t0.0001 key2
-        IFS= read -rsn1 -t0.0001 key3
+        IFS= read -rsn1 -t0.0001 key2 <&6
+        IFS= read -rsn1 -t0.0001 key3 <&6
 
         # If read timeout was interrupted
         if (( $readPid != 142 )); then

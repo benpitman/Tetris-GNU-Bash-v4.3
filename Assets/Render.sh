@@ -32,32 +32,37 @@ destroyLines()
         cleanPid    \
         colour      \
         offset=1    \
-        pixelType   \
+        tileType    \
         xPlus       \
         xPos        \
         yPlus       \
         yPos        \
         zeroes=0
 
-    for pixelType in block blank; do
+    if [[ "$_colourMode" != 'NOIR' ]]; then
         for xPos in {2..20..2}; do
             for yPos in $*; do
-                printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${!pixelType}${colours[${coloursLookup[R]}]}"
+                printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${block}${colours[${coloursLookup[R]}]}"
             done
             sleep 0.02
         done
         sleep 0.04
+    fi
+
+    for xPos in {2..20..2}; do
+        for yPos in $*; do
+            printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
+            _lock[$yPos,$xPos]=0
+        done
+        sleep 0.02
     done
 
     for (( yPlus = ${@: -1} - 1; yPlus > 1; yPlus-- )); do
-        (( $zeroes == 10 )) && break || zeroes=0
-
-        if [[ " $@ " =~ " $yPlus " ]]; then
+        if [[ " $* " =~ " $yPlus " ]]; then
             (( offset++ ))
             continue
         fi
 
-        #BUG still not 100% functional but will work for a short period
         for xPlus in {2..20..2}; do
             colour=${_lock[$yPlus,$xPlus]}
             if (( $colour )); then
@@ -69,6 +74,8 @@ destroyLines()
             fi
             _lock[$(( $yPlus + $offset )),$xPlus]=$colour
         done
+
+        (( $zeroes == 10 )) && break || zeroes=0    # Blank line detected (no further lines above can have colour)
     done
 }
 
@@ -88,10 +95,10 @@ checkLines()
                 break
             fi
         done
-        $line && toDestroy+=( $yPos )
+        $line && toDestroy[$yPos]=
     done
 
-    (( ${#toDestroy[@]} )) && destroyLines "${toDestroy[@]}"
+    (( ${#toDestroy[@]} )) && destroyLines ${!toDestroy[@]}
     lineUp ${#toDestroy[@]}
 }
 
@@ -108,11 +115,11 @@ lockPiece()
 
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
-        toCheck[(( $y + $yAx ))]=1 # Save as keys to avoid duplicates
+        toCheck[(( $y + $yAx ))]= # Save as keys to avoid duplicates
         _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=${coloursLookup[$1]}
     done
 
-    checkLines "${!toCheck[@]}"
+    checkLines ${!toCheck[@]}
 }
 
 canRender()
@@ -155,7 +162,7 @@ renderPiece()
     local -n piece="$1"
     local                   \
         coord               \
-        pixel               \
+        tile                \
         reset=${4:-false}   \
         x=$3                \
         xAx                 \
@@ -165,11 +172,11 @@ renderPiece()
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< "$coord"
         if $reset; then
-            pixel="${blank}"
+            tile="${blank}"
         else
-            pixel="${colours[${coloursLookup[$1]}]}${block}${colours[${coloursLookup[R]}]}"
+            tile="${colours[${coloursLookup[$1]}]}${block}${colours[${coloursLookup[R]}]}"
         fi
-        printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$pixel"
+        printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$tile"
     done
 }
 
@@ -195,9 +202,9 @@ navigateMenu()
             printf '\e[%s;%sH%b' ${menuOptions[$m,y]} ${menuOptions[$m,x]} "$text"
         done
 
-        IFS= read -srn 1 key1
-        IFS= read -srn 1 -t 0.001 key2
-        IFS= read -srn 1 -t 0.001 key3
+        IFS= read -srn 1 key1 <&6
+        IFS= read -srn 1 -t 0.001 key2 <&6
+        IFS= read -srn 1 -t 0.001 key3 <&6
 
         test -z "$key1" && break
 
@@ -219,7 +226,7 @@ renderMain()
         0)  _state=1;; # New game
         1)  _state=2;; # Scores
         2)  _state=3;; # Settings
-        3)  exit 0;
+        3)  exit 0;;
     esac
 }
 
@@ -248,7 +255,7 @@ renderNextPiece()
     local y
 
     for y in {0..3}; do
-        printf '\e[%s;%sH%b' $(( ${nextPiece[R,y]} + $y )) ${nextPiece[R,x]} "${R[0]//0/\\u0020\\u0020}"
+        printf '\e[%s;%sH%b' $(( ${nextPiece[R,y]} + $y )) ${nextPiece[R,x]} "${R[0]//0/$blank}"
     done
 
     renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,y]} ${nextPiece[$_nextPiece,x]}
