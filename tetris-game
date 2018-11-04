@@ -20,15 +20,6 @@ log()
     printf '\n%s:' "$*" 1>&2
 }
 
-# If game is loaded on a terminal outside of a GUI environment
-if test -z "$DISPLAY" || [[ "$TERM" == "linux" ]]; then
-    _inTTY=true
-    _colourMode='TTY'
-else
-    _inTTY=false
-    _colourMode='GUI'
-fi
-
 logDir=/var/games/tetris
 # Debug mode sends STDERR to an error file
 export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
@@ -52,9 +43,6 @@ libDir="/usr/local/lib/tetris"
 
 # Import the assets
 assetPath='Assets/'
-for asset in ${assetPath}*; do
-    source "$asset"
-done
 
 _state=0
 _level=0
@@ -65,9 +53,28 @@ _nextPiece=
 _rotation=
 _pieceX=
 _pieceY=
+_inTTY=
+_colourMode=
 
 # Collision detection
 declare -A _lock
+
+if test -s "$settingsLog"; then
+    :
+else
+    # If game is loaded on a terminal outside of a GUI environment
+    if test -z "$DISPLAY" || [[ "$TERM" == "linux" ]]; then
+        _inTTY=true
+        _colourMode='SIMPLE'
+    else
+        _inTTY=false
+        _colourMode='NORMAL'
+    fi
+fi
+
+for asset in ${assetPath}*; do
+    source "$asset"
+done
 
 movePiece()
 {
@@ -129,8 +136,7 @@ setDefaults()
 
     # Starting geometry for new pieces
     _rotation=0
-    _pieceY=2
-    _pieceX=8
+    IFS=',' read _pieceY _pieceX <<< $startPosition
     newPiece=false
 }
 
@@ -239,7 +245,5 @@ while true; do
     case $_state in
         *)  renderScreen;;&
         1)  newGame;;
-        2)  break;;
-        3)  break;;
     esac
 done

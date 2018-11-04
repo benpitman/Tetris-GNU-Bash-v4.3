@@ -1,29 +1,43 @@
 pause()
 {
-    local unpause
+    local           \
+        paddedText  \
+        unpause
+
     # Basic pause screen
-    printf "\e[%s;%sH%s" ${fieldOptions[pause,y]} ${fieldOptions[pause,x]} "${fieldOptions[pause,text]}"
+    navigateTo ${fieldOptions[pause,y]} ${fieldOptions[pause,x]}
+    renderText "${fieldOptions[pause]}"
     while read -rsn1 unpause; do
         [[ "$unpause" == $'\e' ]] && break
     done
-    printf "\e[%s;%sH%${#fieldOptions[pause,text]}s" ${fieldOptions[pause,y]} ${fieldOptions[pause,x]}
+    navigateTo ${fieldOptions[pause,y]} ${fieldOptions[pause,x]}
+    printf -v paddedText "%${#fieldOptions[pause]}s"
+    renderText "$paddedText"
 }
 
 levelUp()
 {
+    local paddedText
+
     (( _level++ ))
-    printf "\e[%s;%sH%${fieldOptions[level,width]}s" ${fieldOptions[level,y]} ${fieldOptions[level,x]} $_level
+    navigateTo ${fieldOptions[level,y]} ${fieldOptions[level,x]}
+    printf -v paddedText "%${fieldOptions[level,length]}s" $_level
+    renderText "$paddedText"
 }
 
 lineUp()
 {
-    local l
+    local           \
+        l           \
+        paddedText
 
     for (( l = 0; l < $1; l++ )); do
         (( ++_lines % 10 == 0 )) && levelUp
     done
 
-    printf "\e[%s;%sH%${fieldOptions[lines,width]}s" ${fieldOptions[lines,y]} ${fieldOptions[lines,x]} $_lines
+    navigateTo ${fieldOptions[lines,y]} ${fieldOptions[lines,x]}
+    printf -v paddedText "%${fieldOptions[lines,length]}s" $_lines
+    renderText "$paddedText"
 }
 
 destroyLines()
@@ -39,10 +53,11 @@ destroyLines()
         yPos        \
         zeroes=0
 
-    if [[ "$_colourMode" != 'NOIR' ]]; then
+    if ! [[ "$_colourMode" =~ (NOIR|BLEACH) ]]; then
         for xPos in {2..20..2}; do
             for yPos in $*; do
-                printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${block}${colours[${coloursLookup[R]}]}"
+                navigateTo $yPos $xPos
+                renderText "${colours[${coloursLookup[W]}]}${block}${colours[${coloursLookup[R]}]}"
             done
             sleep 0.02
         done
@@ -51,7 +66,8 @@ destroyLines()
 
     for xPos in {2..20..2}; do
         for yPos in $*; do
-            printf '\e[%s;%sH%b' $yPos $xPos "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
+            navigateTo $yPos $xPos
+            renderText "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
             _lock[$yPos,$xPos]=0
         done
         sleep 0.02
@@ -66,8 +82,10 @@ destroyLines()
         for xPlus in {2..20..2}; do
             colour=${_lock[$yPlus,$xPlus]}
             if (( $colour )); then
-                printf '\e[%s;%sH%b' $yPlus $xPlus "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
-                printf '\e[%s;%sH%b' $(( $yPlus + $offset )) $xPlus "${colours[$colour]}${block}${colours[${coloursLookup[R]}]}"
+                navigateTo $yPlus $xPlus
+                renderText "${colours[${coloursLookup[W]}]}${blank}${colours[${coloursLookup[R]}]}"
+                navigateTo $(( $yPlus + $offset )) $xPlus
+                renderText "${colours[$colour]}${block}${colours[${coloursLookup[R]}]}"
                 _lock[$yPlus,$xPlus]=0
             else
                 (( zeroes++ ))
@@ -176,13 +194,20 @@ renderPiece()
         else
             tile="${colours[${coloursLookup[$1]}]}${block}${colours[${coloursLookup[R]}]}"
         fi
-        printf '\e[%s;%sH%b' $(( $y + $yAx )) $(( $x + ($xAx * 2) )) "$tile"
+        navigateTo $(( $y + $yAx )) $(( $x + ($xAx * 2) ))
+        renderText "$tile"
     done
 }
 
 removePiece()
 {
     renderPiece "$1" $2 $3 true
+}
+
+renderNextPiece()
+{
+    removePiece "$_currentPiece" ${nextPiece[$_currentPiece,y]} ${nextPiece[$_currentPiece,x]}
+    renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,y]} ${nextPiece[$_nextPiece,x]}
 }
 
 navigateMenu()
@@ -192,14 +217,20 @@ navigateMenu()
         key1        \
         key2        \
         key3        \
+        optionText  \
         selected=0  \
         m
 
     while true; do
         for (( m = 0; $m < (${menuOptions[max]} + 1); m++ )); do
-            (( $m == $selected )) && text='\e[7m' || text='\e[0m'
-            text+="${menuOptions[$m,text]}\e[0m"
-            printf '\e[%s;%sH%b' ${menuOptions[$m,y]} ${menuOptions[$m,x]} "$text"
+            # if [[ "$_colourMode" == "BLEACH" ]]; then
+            #     (( $m == $selected )) && optionText='\e[27m' || optionText='\e[7m'
+            # else
+            # fi
+            (( $m == $selected )) && optionText='\e[7m' || optionText='\e[27m'
+            optionText+="${menuOptions[$m]}\e[27m"
+            navigateTo ${menuOptions[$m,y]} ${menuOptions[$m,x]}
+            renderText "$optionText"
         done
 
         IFS= read -srn 1 key1 <&6
@@ -217,9 +248,57 @@ navigateMenu()
     return $selected
 }
 
+renderSubMenu()
+{
+    local -n subOptions="$1"
+    local           \
+        optionText  \
+        selected=0  \
+        s
+
+    navigateTo ${subOptions[y]} ${subOptions[x]}
+    renderText "${subOptions[top]}"
+    for (( s = 1; $s < ${subOptions[max]}; s++ )); do
+        navigateTo $(( ${subOptions[y]} + $s )) ${subOptions[x]}
+        renderText "${subOptions[middle]}"
+    done
+    navigateTo $(( ${subOptions[y]} + $s )) ${subOptions[x]}
+    renderText "${subOptions[bottom]}"
+
+    navigateMenu 'settingsColourSubOptions'
+    case $? in
+        0)  _colourMode='NORMAL';;
+        1)  _colourMode='SIMPLE';;
+        2)  _colourMode='NOIR';;
+        3)  _colourMode='BLEACH';;
+    esac
+}
+
+renderPartial()
+{
+    local -n partialOptions="$1"
+    local           \
+        c           \
+        half        \
+        optionText  \
+        p
+
+    for (( c = 0; $c < ${partialOptions[clear,max]}; c++ )); do
+        navigateTo $(( ${partialOptions[clear,y]} + $c )) ${partialOptions[clear,x]}
+        renderText "${partialOptions[clear]}"
+    done
+
+    for (( p = 0; $p < ${partialOptions[clear,max]}; p++ )); do
+        optionText="${!partialOptions[$p]}"
+        half=$(( (${partialOptions[width]} - ${#optionText}) / 2 ))
+        navigateTo ${partialOptions[$p,y]} $(( ${partialOptions[$p,x]} + $half + 1 ))
+        renderText "$optionText"
+    done
+}
+
 renderMain()
 {
-    printf '%s' "$mainScreen"
+    renderText "${mainScreen[@]}"
 
     navigateMenu 'mainOptions'
     case $? in
@@ -232,31 +311,53 @@ renderMain()
 
 renderField()
 {
-    printf '%s' "$fieldScreen"
+    renderText "${fieldScreen[@]}"
+}
+
+renderScores()
+{
+    return
+}
+
+renderSettings()
+{
+    renderText "${settingsScreen[@]}"
+
+    renderPartial 'settingsSubMenu'
+    navigateMenu 'settingsOptions'
+    case $? in
+        0)  renderSubMenu 'settingsColourSub';;
+        1)  _state=0
+            return;; # Return to main menu
+    esac
 }
 
 renderScreen()
 {
     local screen=''
 
-    printf '\e[2J\e[1;1H%s' "${colours[0]}"
     setColours
+    clearScreen
 
     case $_state in
         0)  renderMain;;
         1)  renderField;;
         2)  return;;
-        3)  return;;
+        3)  renderSettings;;
     esac
 }
 
-renderNextPiece()
+clearScreen()
 {
-    local y
+    printf '\e[2J\e[1;1H'
+}
 
-    for y in {0..3}; do
-        printf '\e[%s;%sH%b' $(( ${nextPiece[R,y]} + $y )) ${nextPiece[R,x]} "${R[0]//0/$blank}"
-    done
+navigateTo()
+{
+    printf '\e[%s;%sH' $1 $2
+}
 
-    renderPiece "$_nextPiece" ${nextPiece[$_nextPiece,y]} ${nextPiece[$_nextPiece,x]}
+renderText()
+{
+    printf "${colours[0]}%b\e[0m\n" "$@"
 }
