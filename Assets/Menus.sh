@@ -25,7 +25,7 @@ declare -A settingsOptions=(
     ['max']=1
 
     ['0']=' COLOUR  MODE '
-    ['0,y']=8
+    ['0,y']=9
     ['0,x']=6
 
     ['1']=' BACK '
@@ -39,12 +39,12 @@ declare -A settingsSubMenu=(
     ['width']=11
 
     ['0']='_colourMode'
-    ['0,y']=8
-    ['0,x']=27
+    ['0,y']=9
+    ['0,x']=26
 
     ['clear']='              '
     ['clear,y']=8
-    ['clear,x']=26
+    ['clear,x']=25
     ['clear,max']=11
 )
 
@@ -53,7 +53,7 @@ declare -A settingsColourSub=(
     ['max']=10
 
     ['y']=8
-    ['x']=26
+    ['x']=25
 
     ['top']='┌────────────┐'
     ['middle']='│            │'
@@ -66,19 +66,19 @@ declare -A settingsColourSubOptions=(
 
     ['0']='  NORMAL  '
     ['0,y']=10
-    ['0,x']=28
+    ['0,x']=27
 
     ['1']='  SIMPLE  '
     ['1,y']=12
-    ['1,x']=28
+    ['1,x']=27
 
     ['2']='   NOIR   '
     ['2,y']=14
-    ['2,x']=28
+    ['2,x']=27
 
     ['3']='  BLEACH  '
     ['3,y']=16
-    ['3,x']=28
+    ['3,x']=27
 )
 
 startPosition='2,8'
