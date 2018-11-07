@@ -1,4 +1,10 @@
-
+startPosition='2,8'
+colourModes=(
+    'NORMAL'
+    'SIMPLE'
+    'NOIR'
+    'BLEACH'
+)
 
 declare -A mainOptions=(
     ['max']=3
@@ -22,15 +28,40 @@ declare -A mainOptions=(
 
 # Settings menu options
 declare -A settingsOptions=(
-    ['max']=1
+    ['max']=2
 
     ['0']=' COLOUR  MODE '
     ['0,y']=9
     ['0,x']=6
 
-    ['1']=' BACK '
-    ['1,y']=21
-    ['1,x']=10
+    ['1']=' GAME  MODE '
+    ['1,y']=11
+    ['1,x']=7
+
+    ['2']=' BACK '
+    ['2,y']=21
+    ['2,x']=10
+)
+
+# Opens up the submenu for selection
+declare -A settingsClearSubMenu=(
+    ['max']=12
+
+    ['y']=8
+    ['x']=25
+
+     ['0']='┌────────────┐'
+     ['1']='│            │'
+     ['2']='│            │'
+     ['3']='│            │'
+     ['4']='│            │'
+     ['5']='│            │'
+     ['6']='│            │'
+     ['7']='│            │'
+     ['8']='│            │'
+     ['9']='│            │'
+    ['10']='│            │'
+    ['11']='└────────────┘'
 )
 
 # Clears the chosen items for repopulation
@@ -46,18 +77,6 @@ declare -A settingsSubMenu=(
     ['clear,y']=8
     ['clear,x']=25
     ['clear,max']=11
-)
-
-# Opens up the submenu for selection
-declare -A settingsColourSub=(
-    ['max']=10
-
-    ['y']=8
-    ['x']=25
-
-    ['top']='┌────────────┐'
-    ['middle']='│            │'
-    ['bottom']='└────────────┘'
 )
 
 # Settings colour mode submenu options
@@ -80,8 +99,6 @@ declare -A settingsColourSubOptions=(
     ['3,y']=16
     ['3,x']=27
 )
-
-startPosition='2,8'
 
 declare -A fieldOptions=(
     ['score,x']=28

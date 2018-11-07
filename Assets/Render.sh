@@ -223,10 +223,6 @@ navigateMenu()
 
     while true; do
         for (( m = 0; $m < (${menuOptions[max]} + 1); m++ )); do
-            # if [[ "$_colourMode" == "BLEACH" ]]; then
-            #     (( $m == $selected )) && optionText='\e[27m' || optionText='\e[7m'
-            # else
-            # fi
             (( $m == $selected )) && optionText='\e[7m' || optionText='\e[27m'
             optionText+="${menuOptions[$m]}\e[27m"
             navigateTo ${menuOptions[$m,y]} ${menuOptions[$m,x]}
@@ -248,30 +244,15 @@ navigateMenu()
     return $selected
 }
 
-renderSubMenu()
+clearSubMenu()
 {
-    local -n subOptions="$1"
-    local           \
-        optionText  \
-        selected=0  \
-        s
+    local -n subClear="$1"
+    local s
 
-    navigateTo ${subOptions[y]} ${subOptions[x]}
-    renderText "${subOptions[top]}"
-    for (( s = 1; $s < ${subOptions[max]}; s++ )); do
-        navigateTo $(( ${subOptions[y]} + $s )) ${subOptions[x]}
-        renderText "${subOptions[middle]}"
+    for (( s = 1; $s < ${subClear[max]}; s++ )); do
+        navigateTo $(( ${subClear[y]} + $s )) ${subClear[x]}
+        renderText "${subClear[$s]}"
     done
-    navigateTo $(( ${subOptions[y]} + $s )) ${subOptions[x]}
-    renderText "${subOptions[bottom]}"
-
-    navigateMenu 'settingsColourSubOptions'
-    case $? in
-        0)  _colourMode='NORMAL';;
-        1)  _colourMode='SIMPLE';;
-        2)  _colourMode='NOIR';;
-        3)  _colourMode='BLEACH';;
-    esac
 }
 
 renderPartial()
@@ -325,9 +306,13 @@ renderSettings()
 
     renderPartial 'settingsSubMenu'
     navigateMenu 'settingsOptions'
+
     case $? in
-        0)  renderSubMenu 'settingsColourSub';;
-        1)  _state=0
+        0)  clearSubMenu 'settingsClearSubMenu'
+            navigateMenu 'settingsColourSubOptions'
+            _colourMode=${colourModes[$?]};;
+        1)  ;;
+        2)  _state=0
             return;; # Return to main menu
     esac
 }
