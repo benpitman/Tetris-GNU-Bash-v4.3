@@ -213,12 +213,12 @@ renderNextPiece()
 navigateMenu()
 {
     local -n menuOptions="$1"
-    local           \
-        key1        \
-        key2        \
-        key3        \
-        optionText  \
-        selected=0  \
+    local                   \
+        key1                \
+        key2                \
+        key3                \
+        optionText          \
+        selected=${2:-0}    \
         m
 
     while true; do
@@ -229,9 +229,9 @@ navigateMenu()
             renderText "$optionText"
         done
 
-        IFS= read -srn 1 key1 <&6
-        IFS= read -srn 1 -t 0.001 key2 <&6
-        IFS= read -srn 1 -t 0.001 key3 <&6
+        IFS= read -srn 1 key1
+        IFS= read -srn 1 -t 0.001 key2
+        IFS= read -srn 1 -t 0.001 key3
 
         test -z "$key1" && break
 
@@ -249,7 +249,7 @@ clearSubMenu()
     local -n subClear="$1"
     local s
 
-    for (( s = 1; $s < ${subClear[max]}; s++ )); do
+    for (( s = 0; $s < ${subClear[max]}; s++ )); do
         navigateTo $(( ${subClear[y]} + $s )) ${subClear[x]}
         renderText "${subClear[$s]}"
     done
@@ -281,8 +281,9 @@ renderMain()
 {
     renderText "${mainScreen[@]}"
 
-    navigateMenu 'mainOptions'
-    case $? in
+    navigateMenu 'mainOptions' ${_selected[main]}
+    _selected[main]=$?
+    case ${_selected[main]} in
         0)  _state=1;; # New game
         1)  _state=2;; # Scores
         2)  _state=3;; # Settings
@@ -305,14 +306,16 @@ renderSettings()
     renderText "${settingsScreen[@]}"
 
     renderPartial 'settingsSubMenu'
-    navigateMenu 'settingsOptions'
+    navigateMenu 'settingsOptions' ${_selected[settings]}
+    _selected['settings']=$?
 
-    case $? in
-        0)  clearSubMenu 'settingsClearSubMenu'
-            navigateMenu 'settingsColourSubOptions'
+    case ${_selected[settings]} in
+        *)  clearSubMenu 'settingsClearSubMenu';;&
+        0)  navigateMenu 'settingsColourSubOptions'
             _colourMode=${colourModes[$?]};;
-        1)  ;;
+        1)  navigateMenu 'settingsGameSubOptions';;
         2)  _state=0
+            _selected['settings']=0
             return;; # Return to main menu
     esac
 }
@@ -327,7 +330,7 @@ renderScreen()
     case $_state in
         0)  renderMain;;
         1)  renderField;;
-        2)  return;;
+        2)  renderScores;;
         3)  renderSettings;;
     esac
 }

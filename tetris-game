@@ -7,11 +7,10 @@ TetrisDoc
 
 extrap()
 {
-    stty sane <&6
+    stty sane
     tput cvvis
     tput sgr0
     printf '\e[25;1H'
-    exec 0<&6 6<&-
 }
 trap extrap EXIT
 
@@ -32,9 +31,7 @@ else
     exec 2>$logDir/error.log
 fi
 
-exec 6<&0 0</dev/null
-
-stty -echo <&6  # Disable echo
+stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
 
 hsLog="$logDir/highscores.ths"
@@ -55,6 +52,11 @@ _pieceX=
 _pieceY=
 _inTTY=
 _colourMode=
+
+declare -A _selected=(
+    ['main']=0
+    ['settings']=0
+)
 
 # Collision detection
 declare -A _lock
@@ -164,7 +166,7 @@ gameLoop()
             (( $collides )) && : # Game Over
             renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
-            read -n10000 -t0.0001 <&6 # Clear input buffer
+            read -n10000 -t0.0001 # Clear input buffer
         elif $updatePosition; then
             # $_debug && log "move"
             movePiece
@@ -184,10 +186,10 @@ gameLoop()
         (( $tick < 10 )) && tick="0$tick"
 
         # Read STDIN with the timeout relative to the speed
-        IFS= read -rsn1 -t0.$tick key1 <&6
+        IFS= read -rsn1 -t0.$tick key1
         readPid=$?
-        IFS= read -rsn1 -t0.0001 key2 <&6
-        IFS= read -rsn1 -t0.0001 key3 <&6
+        IFS= read -rsn1 -t0.0001 key2
+        IFS= read -rsn1 -t0.0001 key3
 
         # If read timeout was interrupted
         if (( $readPid != 142 )); then
