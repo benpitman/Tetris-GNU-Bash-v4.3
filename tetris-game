@@ -9,49 +9,24 @@ extrap()
 {
     stty sane
     tput cvvis
-    tput sgr0
-    printf '\e[25;1H'
+    printf '\e[25;1H\e[0m'
 }
 trap extrap EXIT
 
-log()
-{
-    printf '\n%s:' "$*" 1>&2
-}
-
-logDir=/var/games/tetris
 # Debug mode sends STDERR to an error file
-export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
-_debug=${1:-false}
-
-if $_debug; then
-    exec 2>~/debug.log
-    set -xT
-else
-    exec 2>$logDir/error.log
-fi
-
-stty -echo  # Disable echo
-tput civis  # Disable cursor blinker
-
-hsLog="$logDir/highscores.ths"
-touch "$hsLog" # Create score log if doesn't exist
-libDir="/usr/local/lib/tetris"
-
-# Import the assets
-assetPath='Assets/'
-
-_state=0
-_level=0
-_score=0
-_lines=0
-_currentPiece=
-_nextPiece=
-_rotation=
-_pieceX=
-_pieceY=
-_inTTY=
-_colourMode=
+declare -g _colourMode=
+declare -g _currentPiece=
+declare -g _debug=${1:-false}
+declare -g _gameMode=
+declare -g _inTTY=
+declare -g _level=0
+declare -g _lines=0
+declare -g _nextPiece=
+declare -g _pieceX=
+declare -g _pieceY=
+declare -g _rotation=
+declare -g _score=0
+declare -g _state=0
 
 declare -A _selected=(
     ['main']=0
@@ -60,6 +35,9 @@ declare -A _selected=(
 
 # Collision detection
 declare -A _lock
+
+stty -echo  # Disable echo
+tput civis  # Disable cursor blinker
 
 if test -s "$settingsLog"; then
     :
@@ -74,9 +52,21 @@ else
     fi
 fi
 
-for asset in ${assetPath}*; do
+# Import the assets
+for asset in Assets/*; do
     source "$asset"
 done
+unset asset
+
+touch "$HIGHSCORE_LOG" # Create score log if doesn't exist
+
+export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+if $_debug; then
+    exec 2>~/debug.log
+    set -xT
+else
+    exec 2>"$ERROR_LOG"
+fi
 
 movePiece()
 {
@@ -133,12 +123,12 @@ rotatePiece()
 
 setDefaults()
 {
-    test -n "$_nextPiece" && _currentPiece=$_nextPiece || _currentPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
-    _nextPiece=${pieces[$(( $RANDOM % ${#pieces[@]} ))]}
+    test -n "$_nextPiece" && _currentPiece=$_nextPiece || _currentPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+    _nextPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
 
     # Starting geometry for new pieces
     _rotation=0
-    IFS=',' read _pieceY _pieceX <<< $startPosition
+    IFS=',' read _pieceY _pieceX <<< $START_POSITION
     newPiece=false
 }
 
@@ -168,7 +158,6 @@ gameLoop()
             renderNextPiece
             read -n10000 -t0.0001 # Clear input buffer
         elif $updatePosition; then
-            # $_debug && log "move"
             movePiece
             updatePosition=false
             $newPiece && continue
@@ -195,7 +184,6 @@ gameLoop()
         if (( $readPid != 142 )); then
             # If enter or space is pressed
             if test -z "$key1" || [[ "$key1" == " " ]]; then
-                # $_debug && log "rotate"
                 rotatePiece
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
@@ -231,12 +219,12 @@ gameLoop()
     done
 }
 
-# Set blank global variables to allow restarting
+# Set BLANK global variables to allow restarting
 newGame()
 {
     _level=0
     _score=0
-    eval _lock[{2..23},{2..20..2}]=${coloursLookup[R]}
+    eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
     # scoreModifier false
     gameLoop
