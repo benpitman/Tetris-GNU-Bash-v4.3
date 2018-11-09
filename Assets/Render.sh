@@ -157,21 +157,16 @@ canRender()
 
         # Needs to check tetromino collision first for rotation
         if (( ${_lock[$yAx,$xAx]} )); then
-            collides=4
-            return 1
+            return 4
         elif (( $xAx > 20 )); then # Right wall
-            collides=1
             return 1
         elif (( $xAx < 2 )); then # Left wall
-            collides=3
-            return 1
+            return 3
         elif (( $yAx > 23 )); then # Floor
-            collides=2
-            return 1
+            return 2
         fi
     done
 
-    collides=0
     return 0
 }
 

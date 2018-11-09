@@ -70,7 +70,7 @@ renderMain()
     renderText "${MAIN_SCREEN[@]}"
 
     navigateMenu 'MAIN_OPTIONS' ${_selected[main]}
-    _selected[main]=$?
+    _selected['main']=$?
     case ${_selected[main]} in
         0)  _state=1;; # New game
         1)  _state=2;; # Scores
@@ -109,6 +109,11 @@ renderSettings()
     esac
 }
 
+renderEnd()
+{
+    read
+}
+
 renderScreen()
 {
     local screen=''
@@ -120,6 +125,7 @@ renderScreen()
         1)  renderField;;
         2)  renderScores;;
         3)  renderSettings;;
+        4)  renderEnd;;
     esac
 }
 

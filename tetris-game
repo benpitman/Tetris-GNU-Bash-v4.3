@@ -28,18 +28,18 @@ declare -g _rotation=
 declare -g _score=0
 declare -g _state=0
 
-declare -A _selected=(
+declare -Ag _selected=(
     ['main']=0
     ['settings']=0
 )
 
 # Collision detection
-declare -A _lock
+declare -Ag _lock
 
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
 
-if test -s "$settingsLog"; then
+if test -s "$SETTINGS_LOG"; then
     :
 else
     # If game is loaded on a terminal outside of a GUI environment
@@ -58,9 +58,9 @@ for asset in Assets/*; do
 done
 unset asset
 
+setColours
 touch "$HIGHSCORE_LOG" # Create score log if doesn't exist
 
-export PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
 if $_debug; then
     exec 2>~/debug.log
     set -xT
@@ -83,7 +83,7 @@ movePiece()
 
     canRender "$_currentPiece" $nextY $nextX
 
-    if (( $collides == 0 )); then
+    if (( $? == 0 )); then
         removePiece "$_currentPiece" $_pieceY $_pieceX
         renderPiece "$_currentPiece" $nextY $nextX
         _pieceX=$nextX
@@ -105,8 +105,11 @@ rotatePiece()
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
-    while ! canRender "$_currentPiece" $posY $posX; do
-        case $collides in
+    while true; do
+        canRender "$_currentPiece" $posY $posX
+
+        case $? in
+            0)      break;;
             1)      (( posX -= 2 ));; # Right wall
             3)      (( posX += 2 ));; # Left wall
             2|4)    _rotation=$captureRotation
@@ -135,7 +138,6 @@ setDefaults()
 gameLoop()
 {
     local                       \
-        collides=0              \
         direction               \
         key1                    \
         key2                    \
@@ -153,7 +155,12 @@ gameLoop()
         if $newPiece; then
             setDefaults
             canRender "$_currentPiece" $_pieceY $_pieceX
-            (( $collides )) && : # Game Over
+            if (( $? )); then
+                renderPiece "$_currentPiece" $_pieceY $_pieceX
+                _state=4
+                return;
+            fi
+
             renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
             read -n10000 -t0.0001 # Clear input buffer

@@ -1,14 +1,16 @@
 #################################### Logs ######################################
 
-declare -xrg LOG_DIR=/var/games/tetris
-declare -xrg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
-declare -xrg ERROR_LOG="$LOG_DIR/error.log"
-declare -xrg DEBUG_LOG="$LOG_DIR/debug.log"
+declare -rg PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+declare -rg LOG_DIR='/var/games/tetris'
+declare -rg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
+declare -rg SETTINGS_LOG="$LOG_DIR/settings.txt"
+declare -rg ERROR_LOG="$LOG_DIR/error.log"
+declare -rg DEBUG_LOG="$LOG_DIR/debug.log"
 
 ################################## Screens #####################################
 
 if ! $_inTTY; then
-    declare -axrg MAIN_SCREEN=(
+    declare -arg MAIN_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│                                        │'
         '│  █▛██▜█ ██ ▜█ █▛██▜█ ██ █▙  ██  ▟▙ ▜█  │'
@@ -34,7 +36,7 @@ if ! $_inTTY; then
         '│                           © Ben Pitman │'
         '└────────────────────────────────────────┘'
     )
-    declare -axrg FIELD_SCREEN=(
+    declare -arg FIELD_SCREEN=(
         '┌────────────────────┬───────────────────┐'
         '│                    │  ╔═════════════╗  │'
         '│                    ├──╢  S C O R E  ╟──┤'
@@ -60,7 +62,7 @@ if ! $_inTTY; then
         '│                    │  ╚══════════╝     │'
         '└────────────────────┴───────────────────┘'
     )
-    declare -axrg SETTINGS_SCREEN=(
+    declare -arg SETTINGS_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│          ╔═════════════════╗           │'
         '├──────────╢ S E T T I N G S ╟───────────┤'
@@ -87,7 +89,7 @@ if ! $_inTTY; then
         '└────────────────────────────────────────┘'
     )
 else
-    declare -axrg MAIN_SCREEN=(
+    declare -arg MAIN_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│                                        │'
         '│  ██████ █████ ██████ █████  ██  █████  │'
@@ -113,7 +115,7 @@ else
         '│                           © Ben Pitman │'
         '└────────────────────────────────────────┘'
     )
-    declare -axrg FIELD_SCREEN=(
+    declare -arg FIELD_SCREEN=(
         '┌────────────────────┬───────────────────┐'
         '│                    │  ┌─────────────┐  │'
         '│                    ├──┤  S C O R E  ├──┤'
@@ -139,7 +141,7 @@ else
         '│                    │  └──────────┘     │'
         '└────────────────────┴───────────────────┘'
     )
-    declare -axrg SETTINGS_SCREEN=(
+    declare -arg SETTINGS_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│          ┌─────────────────┐           │'
         '├──────────┤ S E T T I N G S ├───────────┤'
@@ -169,18 +171,18 @@ fi
 
 ############################### Menu Navigation ################################
 
-declare -xrg START_POSITION='2,8'
-declare -axrg COLOUR_MODES=(
+declare -rg START_POSITION='2,8'
+declare -arg COLOUR_MODES=(
     'NORMAL'
     'SIMPLE'
     'NOIR'
     'BLEACH'
 )
-declare -axrg GAME_MODES=(
+declare -arg GAME_MODES=(
     'NORMAL'
 )
 
-declare -Axrg MAIN_OPTIONS=(
+declare -Arg MAIN_OPTIONS=(
     ['max']=3
 
     ['0']=' N E W   G A M E '
@@ -201,7 +203,7 @@ declare -Axrg MAIN_OPTIONS=(
 )
 
 # Settings menu options
-declare -Axrg SETTINGS_OPTIONS=(
+declare -Arg SETTINGS_OPTIONS=(
     ['max']=2
 
     ['0']=' COLOUR  MODE '
@@ -218,7 +220,7 @@ declare -Axrg SETTINGS_OPTIONS=(
 )
 
 # Opens up the submenu for selection
-declare -Axrg SETTINGS_CLEAR_SUB_MENU=(
+declare -Arg SETTINGS_CLEAR_SUB_MENU=(
     ['max']=11
 
     ['y']=9
@@ -238,7 +240,7 @@ declare -Axrg SETTINGS_CLEAR_SUB_MENU=(
 )
 
 # Clears the chosen items for repopulation
-declare -Axrg SETTINGS_SUB_MENU=(
+declare -Arg SETTINGS_SUB_MENU=(
     ['max']=0
     ['width']=11
 
@@ -253,7 +255,7 @@ declare -Axrg SETTINGS_SUB_MENU=(
 )
 
 # Settings colour mode submenu options
-declare -Axrg SETTINGS_COLOUR_SUB_OPTIONS=(
+declare -Arg SETTINGS_COLOUR_SUB_OPTIONS=(
     ['max']=3
 
     ['0']='  NORMAL  '
@@ -273,7 +275,7 @@ declare -Axrg SETTINGS_COLOUR_SUB_OPTIONS=(
     ['3,x']=27
 )
 
-declare -Axrg SETTINGS_GAME_SUB_OPTIONS=(
+declare -Arg SETTINGS_GAME_SUB_OPTIONS=(
     ['max']=1
 
     ['0']='  NORMAL  '
@@ -281,7 +283,7 @@ declare -Axrg SETTINGS_GAME_SUB_OPTIONS=(
     ['0,x']=27
 )
 
-declare -Axrg FIELD_OPTIONS=(
+declare -Arg FIELD_OPTIONS=(
     ['score,x']=28
     ['score,y']=6
     ['score,length']=9
@@ -299,7 +301,7 @@ declare -Axrg FIELD_OPTIONS=(
     ['pause,y']=8
 )
 
-declare -Axrg NEXT_PIECE=(
+declare -Arg NEXT_PIECE=(
     ['R,x']=26  # Reset
     ['R,y']=19
 
@@ -327,14 +329,14 @@ declare -Axrg NEXT_PIECE=(
 
 ################################ Tetrominoes ###################################
 
-declare -xrg BLANK='\u0020\u0020'
-declare -xrg BLOCK='\u2588\u2588'
+declare -rg BLANK='\u0020\u0020'
+declare -rg BLOCK='\u2588\u2588'
 
 setColours()
 {
     case $_colourMode in
         'NORMAL')
-            declare -axg COLOURS=(
+            declare -ag COLOURS=(
                 [0]=$'\e[0m'        # Default
                 [1]=$'\e[38;5;43m'  # Cyan
                 [2]=$'\e[38;5;27m'  # Blue
@@ -347,7 +349,7 @@ setColours()
             )
         ;;
         'SIMPLE')
-            declare -axg COLOURS=(
+            declare -ag COLOURS=(
                 [0]=$'\e[0m'        # Default
                 [1]=$'\e[38;5;27m'  # Blue
                 [2]=$'\e[38;5;128m' # Purple
@@ -360,7 +362,7 @@ setColours()
             )
         ;;
         'NOIR')
-            declare -axg COLOURS=(
+            declare -ag COLOURS=(
                 [0]=$'\e[0;97m'   # white
                 [1]=$'\e[0;97m'
                 [2]=$'\e[0;97m'
@@ -373,7 +375,7 @@ setColours()
             )
         ;;
         'BLEACH')
-            declare -axg COLOURS=(
+            declare -ag COLOURS=(
                 [0]=$'\e[38;5;232;47m'   # Inverted white
                 [1]=$'\e[38;5;232;47m'
                 [2]=$'\e[38;5;232;47m'
@@ -388,7 +390,7 @@ setColours()
     esac
 }
 
-declare -Axrg COLOURS_LOOKUP=(
+declare -Arg COLOURS_LOOKUP=(
     [R]=0   # Reset
     [I]=1
     [J]=2
@@ -400,51 +402,51 @@ declare -Axrg COLOURS_LOOKUP=(
     [W]=8   # White
 )
 
-declare -axrg PIECES=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
+declare -arg PIECES=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
 
-declare -axrg I=(
+declare -arg I=(
     '0,1 1,1 2,1 3,1'
     '2,0 2,1 2,2 2,3'
     '0,2 1,2 2,2 3,2'
     '1,0 1,1 1,2 1,3'
 )
 
-declare -axrg J=(
+declare -arg J=(
     '0,0 0,1 1,1 2,1'
     '1,0 2,0 1,1 1,2'
     '0,1 1,1 2,1 2,2'
     '1,0 1,1 0,2 1,2'
 )
 
-declare -axrg L=(
+declare -arg L=(
     '2,0 0,1 1,1 2,1'
     '1,0 1,1 1,2 2,2'
     '0,1 1,1 2,1 0,2'
     '0,0 1,0 1,1 1,2'
 )
 
-declare -axrg O=(
+declare -arg O=(
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
 )
 
-declare -axrg S=(
+declare -arg S=(
     '1,0 2,0 0,1 1,1'
     '1,0 1,1 2,1 2,2'
     '1,1 2,1 0,2 1,2'
     '0,0 0,1 1,1 1,2'
 )
 
-declare -axrg T=(
+declare -arg T=(
     '1,0 0,1 1,1 2,1'
     '1,0 0,1 1,1 1,2'
     '0,1 1,1 2,1 1,2'
     '1,0 1,1 2,1 1,2'
 )
 
-declare -axrg Z=(
+declare -arg Z=(
     '0,0 1,0 1,1 2,1'
     '2,0 1,1 2,1 1,2'
     '0,1 1,1 1,2 2,2'
