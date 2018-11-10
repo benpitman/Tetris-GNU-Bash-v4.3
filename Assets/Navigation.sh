@@ -10,10 +10,10 @@ navigateMenu()
         m
 
     while true; do
-        for (( m = 0; $m < (${menuOptions[max]} + 1); m++ )); do
+        for (( m = 0; $m < (${menuOptions[MAX]} + 1); m++ )); do
             (( $m == $selected )) && optionText='\e[7m' || optionText='\e[27m'
             optionText+="${menuOptions[$m]}\e[27m"
-            navigateTo ${menuOptions[$m,y]} ${menuOptions[$m,x]}
+            navigateTo ${menuOptions[$m,Y]} ${menuOptions[$m,X]}
             renderText "$optionText"
         done
 
@@ -24,8 +24,8 @@ navigateMenu()
         test -z "$key1" && break
 
         case $key3 in
-            A)  (( $selected == 0 ? selected = ${menuOptions[max]} : selected-- ));; # Up
-            B)  (( $selected == ${menuOptions[max]} ? selected = 0 : selected++ ));; # Down
+            A)  (( $selected == 0 ? selected = ${menuOptions[MAX]} : selected-- ));; # Up
+            B)  (( $selected == ${menuOptions[MAX]} ? selected = 0 : selected++ ));; # Down
         esac
     done
 
@@ -37,8 +37,8 @@ clearSubMenu()
     local -n subClear="$1"
     local s
 
-    for (( s = 0; $s < ${subClear[max]}; s++ )); do
-        navigateTo $(( ${subClear[y]} + $s )) ${subClear[x]}
+    for (( s = 0; $s < ${subClear[MAX]}; s++ )); do
+        navigateTo $(( ${subClear[Y]} + $s )) ${subClear[X]}
         renderText "${subClear[$s]}"
     done
 }
@@ -52,15 +52,15 @@ renderPartial()
         optionText  \
         p
 
-    for (( c = 0; $c < ${partialOptions[clear,max]}; c++ )); do
-        navigateTo $(( ${partialOptions[clear,y]} + $c )) ${partialOptions[clear,x]}
-        renderText "${partialOptions[clear]}"
+    for (( c = 0; $c < ${partialOptions[CLEAR,MAX]}; c++ )); do
+        navigateTo $(( ${partialOptions[CLEAR,Y]} + $c )) ${partialOptions[CLEAR,X]}
+        renderText "${partialOptions[CLEAR]}"
     done
 
-    for (( p = 0; $p < ${partialOptions[clear,max]}; p++ )); do
+    for (( p = 0; $p < ${partialOptions[CLEAR,MAX]}; p++ )); do
         optionText="${!partialOptions[$p]}"
-        half=$(( (${partialOptions[width]} - ${#optionText}) / 2 ))
-        navigateTo ${partialOptions[$p,y]} $(( ${partialOptions[$p,x]} + $half + 1 ))
+        half=$(( (${partialOptions[WIDTH]} - ${#optionText}) / 2 ))
+        navigateTo ${partialOptions[$p,Y]} $(( ${partialOptions[$p,X]} + $half + 1 ))
         renderText "$optionText"
     done
 }
@@ -72,9 +72,9 @@ renderMain()
     navigateMenu 'MAIN_OPTIONS' ${_selected[main]}
     _selected['main']=$?
     case ${_selected[main]} in
-        0)  _state=1;; # New game
-        1)  _state=2;; # Scores
-        2)  _state=3;; # Settings
+        0)  setState 'FIELD';;      # New game
+        1)  setState 'SCORES';;     # Scores
+        2)  setState 'SETTINGS';;   # Settings
         3)  exit 0;;
     esac
 }
@@ -86,7 +86,7 @@ renderField()
 
 renderScores()
 {
-    read
+    setState 'MAIN'
 }
 
 renderSettings()
@@ -98,20 +98,21 @@ renderSettings()
     _selected['settings']=$?
 
     case ${_selected[settings]} in
-        *)  clearSubMenu 'SETTINGS_CLEAR_SUB_MENU';;&
-        0)  navigateMenu 'SETTINGS_COLOUR_SUB_OPTIONS'
-            _colourMode=${COLOUR_MODES[$?]}
-            setColours;;
-        1)  navigateMenu 'SETTINGS_GAME_SUB_OPTIONS';;
-        2)  _state=0
-            _selected['settings']=0
-            return;; # Return to main menu
+        0|1)    clearSubMenu 'SETTINGS_CLEAR_SUB_MENU';;&
+        0)      navigateMenu 'SETTINGS_COLOUR_SUB_OPTIONS'
+                _colourMode=${COLOUR_MODES[$?]}
+                setColours;;
+        1)      navigateMenu 'SETTINGS_GAME_SUB_OPTIONS';;
+        2)      setState 'MAIN'
+                _selected['settings']=0
+                return;; # Return to main menu
     esac
 }
 
 renderEnd()
 {
-    read
+    clearBuffer
+    setState 'MAIN'
 }
 
 renderScreen()
@@ -132,4 +133,9 @@ renderScreen()
 clearScreen()
 {
     printf '\e[2J\e[1;1H'
+}
+
+clearBuffer()
+{
+    read -n10000 -t0.0001 # Clear input buffer
 }

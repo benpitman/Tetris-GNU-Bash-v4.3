@@ -1,18 +1,30 @@
+alert()
+{
+    local                   \
+        paddedText          \
+        sticky=${2:-false}  \
+        key1
+
+    navigateTo ${FIELD_OPTIONS[ALERT,Y]} ${FIELD_OPTIONS[ALERT,X]}
+    renderText "\e[1m${FIELD_OPTIONS[ALERT,$1]}\e[0m"
+
+    if $sticky; then
+        while IFS= read -rsn1 key1; do
+            IFS= read -rsn1 -t0.0001 key2
+            test -z "$key2" && [[ "$key1" == $'\e' ]] && break
+        done
+    else
+        sleep 2
+    fi
+
+    navigateTo ${FIELD_OPTIONS[ALERT,Y]} ${FIELD_OPTIONS[ALERT,X]}
+    printf -v paddedText "%${#FIELD_OPTIONS[ALERT,$1]}s"
+    renderText "$paddedText"
+}
+
 pause()
 {
-    local           \
-        paddedText  \
-        unpause
-
-    # Basic pause screen
-    navigateTo ${FIELD_OPTIONS[pause,y]} ${FIELD_OPTIONS[pause,x]}
-    renderText "${FIELD_OPTIONS[pause]}"
-    while read -rsn1 unpause; do
-        [[ "$unpause" == $'\e' ]] && break
-    done
-    navigateTo ${FIELD_OPTIONS[pause,y]} ${FIELD_OPTIONS[pause,x]}
-    printf -v paddedText "%${#FIELD_OPTIONS[pause]}s"
-    renderText "$paddedText"
+    alert 'PAUSED' true
 }
 
 levelUp()
@@ -20,8 +32,8 @@ levelUp()
     local paddedText
 
     (( _level++ ))
-    navigateTo ${FIELD_OPTIONS[level,y]} ${FIELD_OPTIONS[level,x]}
-    printf -v paddedText "%${FIELD_OPTIONS[level,length]}s" $_level
+    navigateTo ${FIELD_OPTIONS[LEVEL,Y]} ${FIELD_OPTIONS[LEVEL,X]}
+    printf -v paddedText "%${FIELD_OPTIONS[LEVEL,WIDTH]}s" $_level
     renderText "$paddedText"
 }
 
@@ -34,9 +46,15 @@ lineUp()
     for (( l = 0; l < $1; l++ )); do
         (( ++_lines % 10 == 0 )) && levelUp
     done
+    case $1 in
+        1)  alert 'SINGLE' &;;
+        2)  alert 'DOUBLE' &;;
+        3)  alert 'TRIPLE' &;;
+        4)  alert 'TETRIS' &;;
+    esac
 
-    navigateTo ${FIELD_OPTIONS[lines,y]} ${FIELD_OPTIONS[lines,x]}
-    printf -v paddedText "%${FIELD_OPTIONS[lines,length]}s" $_lines
+    navigateTo ${FIELD_OPTIONS[LINES,Y]} ${FIELD_OPTIONS[LINES,X]}
+    printf -v paddedText "%${FIELD_OPTIONS[LINES,WIDTH]}s" $_lines
     renderText "$paddedText"
 }
 
@@ -201,8 +219,8 @@ removePiece()
 
 renderNextPiece()
 {
-    removePiece "$_currentPiece" ${NEXT_PIECE[$_currentPiece,y]} ${NEXT_PIECE[$_currentPiece,x]}
-    renderPiece "$_nextPiece" ${NEXT_PIECE[$_nextPiece,y]} ${NEXT_PIECE[$_nextPiece,x]}
+    removePiece "$_currentPiece" ${NEXT_PIECE[$_currentPiece,Y]} ${NEXT_PIECE[$_currentPiece,X]}
+    renderPiece "$_nextPiece" ${NEXT_PIECE[$_nextPiece,Y]} ${NEXT_PIECE[$_nextPiece,X]}
 }
 
 navigateTo()

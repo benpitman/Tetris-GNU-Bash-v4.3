@@ -169,62 +169,86 @@ else
     )
 fi
 
-############################### Menu Navigation ################################
+############################## States and Modes ################################
 
-declare -rg START_POSITION='2,8'
 declare -arg COLOUR_MODES=(
     'NORMAL'
     'SIMPLE'
     'NOIR'
     'BLEACH'
 )
+setColourMode()
+{
+    _colourMode=${COLOUR_MODES[$1]}
+}
+
 declare -arg GAME_MODES=(
     'NORMAL'
 )
+setGameMode()
+{
+    _gameMode=${GAME_MODES[$1]}
+}
+
+declare -Arg STATES=(
+    ['MAIN']=0
+    ['FIELD']=1
+    ['SCORES']=2
+    ['SETTINGS']=3
+    ['GAME_OVER']=4
+)
+setState()
+{
+    _state=${STATES[$1]}
+}
+
+############################### Menu Navigation ################################
+
+declare -rg START_POSITION='2,8'
 
 declare -Arg MAIN_OPTIONS=(
-    ['max']=3
+    ['MAX']=3
 
     ['0']=' N E W   G A M E '
-    ['0,y']=11
-    ['0,x']=13
+    ['0,Y']=11
+    ['0,X']=13
 
     ['1']=' S C O R E S '
-    ['1,y']=14
-    ['1,x']=15
+    ['1,Y']=14
+    ['1,X']=15
 
     ['2']=' S E T T I N G S '
-    ['2,y']=17
-    ['2,x']=13
+    ['2,Y']=17
+    ['2,X']=13
 
     ['3']=' Q U I T '
-    ['3,y']=20
-    ['3,x']=17
+    ['3,Y']=20
+    ['3,X']=17
 )
 
 # Settings menu options
 declare -Arg SETTINGS_OPTIONS=(
-    ['max']=2
+    ['MAX']=2
 
     ['0']=' COLOUR  MODE '
-    ['0,y']=10
-    ['0,x']=6
+    ['0,Y']=10
+    ['0,X']=6
 
     ['1']=' GAME  MODE '
-    ['1,y']=12
-    ['1,x']=7
+    ['1,Y']=12
+    ['1,X']=7
 
     ['2']=' BACK '
-    ['2,y']=22
-    ['2,x']=10
+    ['2,Y']=22
+    ['2,X']=10
 )
 
 # Opens up the submenu for selection
 declare -Arg SETTINGS_CLEAR_SUB_MENU=(
-    ['max']=11
+    ['MAX']=11
 
-    ['y']=9
-    ['x']=25
+    ['Y']=9
+    ['X']=25
 
      ['0']='┌────────────┐'
      ['1']='│            │'
@@ -241,90 +265,95 @@ declare -Arg SETTINGS_CLEAR_SUB_MENU=(
 
 # Clears the chosen items for repopulation
 declare -Arg SETTINGS_SUB_MENU=(
-    ['max']=0
-    ['width']=11
+    ['MAX']=0
+    ['WIDTH']=11
 
     ['0']='_colourMode'
-    ['0,y']=10
-    ['0,x']=26
+    ['0,Y']=10
+    ['0,X']=26
 
-    ['clear']='              '
-    ['clear,y']=9
-    ['clear,x']=25
-    ['clear,max']=11
+    ['CLEAR']='              '
+    ['CLEAR,Y']=9
+    ['CLEAR,X']=25
+    ['CLEAR,MAX']=11
 )
 
 # Settings colour mode submenu options
 declare -Arg SETTINGS_COLOUR_SUB_OPTIONS=(
-    ['max']=3
+    ['MAX']=3
 
     ['0']='  NORMAL  '
-    ['0,y']=11
-    ['0,x']=27
+    ['0,Y']=11
+    ['0,X']=27
 
     ['1']='  SIMPLE  '
-    ['1,y']=13
-    ['1,x']=27
+    ['1,Y']=13
+    ['1,X']=27
 
     ['2']='   NOIR   '
-    ['2,y']=15
-    ['2,x']=27
+    ['2,Y']=15
+    ['2,X']=27
 
     ['3']='  BLEACH  '
-    ['3,y']=17
-    ['3,x']=27
+    ['3,Y']=17
+    ['3,X']=27
 )
 
 declare -Arg SETTINGS_GAME_SUB_OPTIONS=(
-    ['max']=1
+    ['MAX']=1
 
     ['0']='  NORMAL  '
-    ['0,y']=11
-    ['0,x']=27
+    ['0,Y']=11
+    ['0,X']=27
 )
 
 declare -Arg FIELD_OPTIONS=(
-    ['score,x']=28
-    ['score,y']=6
-    ['score,length']=9
+    ['SCORE,X']=28
+    ['SCORE,Y']=6
+    ['SCORE,WIDTH']=9
 
-    ['level,x']=28
-    ['level,y']=11
-    ['level,length']=9
+    ['LEVEL,X']=28
+    ['LEVEL,Y']=11
+    ['LEVEL,WIDTH']=9
 
-    ['lines,x']=28
-    ['lines,y']=15
-    ['lines,length']=9
+    ['LINES,X']=28
+    ['LINES,Y']=15
+    ['LINES,WIDTH']=9
 
-    ['pause']='P A U S E'
-    ['pause,x']=28
-    ['pause,y']=8
+    ['ALERT,PAUSED']='P A U S E D'
+    ['ALERT,SINGLE']='S I N G L E'
+    ['ALERT,DOUBLE']='D O U B L E'
+    ['ALERT,TRIPLE']='T R I P L E'
+    ['ALERT,TETRIS']='T E T R I S'
+    ['ALERT,GAME_OVER']='GAME   OVER'
+    ['ALERT,X']=27
+    ['ALERT,Y']=8
 )
 
 declare -Arg NEXT_PIECE=(
-    ['R,x']=26  # Reset
-    ['R,y']=19
+    ['R,X']=26  # Reset
+    ['R,Y']=19
 
-    ['I,x']=27
-    ['I,y']=19
+    ['I,X']=27
+    ['I,Y']=19
 
-    ['J,x']=28
-    ['J,y']=20
+    ['J,X']=28
+    ['J,Y']=20
 
-    ['L,x']=28
-    ['L,y']=20
+    ['L,X']=28
+    ['L,Y']=20
 
-    ['O,x']=29
-    ['O,y']=20
+    ['O,X']=29
+    ['O,Y']=20
 
-    ['S,x']=28
-    ['S,y']=20
+    ['S,X']=28
+    ['S,Y']=20
 
-    ['T,x']=28
-    ['T,y']=20
+    ['T,X']=28
+    ['T,Y']=20
 
-    ['Z,x']=28
-    ['Z,y']=20
+    ['Z,X']=28
+    ['Z,Y']=20
 )
 
 ################################ Tetrominoes ###################################

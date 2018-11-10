@@ -19,13 +19,13 @@ declare -g _currentPiece=
 declare -g _debug=${1:-false}
 declare -g _gameMode=
 declare -g _inTTY=
-declare -g _level=0
-declare -g _lines=0
+declare -g _level=
+declare -g _lines=
 declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
 declare -g _rotation=
-declare -g _score=0
+declare -g _score=
 declare -g _state=0
 
 declare -Ag _selected=(
@@ -157,13 +157,14 @@ gameLoop()
             canRender "$_currentPiece" $_pieceY $_pieceX
             if (( $? )); then
                 renderPiece "$_currentPiece" $_pieceY $_pieceX
-                _state=4
+                alert 'GAME_OVER'
+                setState 'GAME_OVER'
                 return;
             fi
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
             renderNextPiece
-            read -n10000 -t0.0001 # Clear input buffer
+            clearBuffer
         elif $updatePosition; then
             movePiece
             updatePosition=false
@@ -230,6 +231,7 @@ gameLoop()
 newGame()
 {
     _level=0
+    _lines=0
     _score=0
     eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
