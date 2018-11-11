@@ -86,7 +86,163 @@ renderField()
 
 renderScores()
 {
+    local                   \
+        editableIndex       \
+        editableRow         \
+        line                \
+        newScore=false      \
+        playername          \
+        score               \
+        scores              \
+        scoreShown=false    \
+        userNames=()        \
+        userScores=()
+
+    (( $_score > 0 )) && newScore=true
+
+    renderText "${SCORES_SCREEN[@]}"
+
+    if $LEGACY; then
+        IFS=$'\n' read -d '' -ra scores < "$HIGHSCORE_LOG"
+    else
+        readarray -t scores < "$HIGHSCORE_LOG"
+    fi
+
+    for (( line = 0; $line < ${#scores[@]}; line++ )); do
+        userScores[$line]=${scores[$line]/*\,/}
+        userNames[$line]=${scores[$line]/\,*/}
+
+        if ! $scoreShown && $newScore && (( ${userScores[$line]} <= $_score )); then
+            scoreShown=true
+            editableIndex=$line
+        fi
+    done
+
+    if $newScore; then
+        test -z "$editableIndex" && editableIndex=${#scores[@]}
+        # Insert current score into the arrays
+        userNames=(
+            ${userNames[@]:0:$editableIndex}
+            ""
+            ${userNames[@]:$editableIndex}
+        )
+        userScores=(
+            ${userScores[@]:0:$editableIndex}
+            $_score
+            ${userScores[@]:$editableIndex}
+        )
+    fi
+
+    for (( score = 0; $score < (${SCORES[MAX]} - 1); score++ )); do
+        scoreRow=$(( ${SCORES[Y]} + $score ))
+        if $newScore && (( $score == $editableIndex )); then
+            editableRow=$scoreRow
+        else
+            printScore $scoreRow ${SCORES[X]} $(( $score + 1 )) "${userNames[$score]}" ${userScores[$score]}
+        fi
+    done
+
+    if $newScore; then
+        test -z "$editableRow" && editableRow=$(( ${SCORES[Y]} + ${SCORES[MAX]} ))
+
+        printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score true
+        textEntry $editableRow $(( ${SCORES[X]} + 4 )) 8 "playername"
+
+        # Add the new score to the highscores file
+        if (( $editableIndex == ${#scores[@]} )); then
+            printf '%s,%s\n' "$playername" "$_score" >> "$HIGHSCORE_LOG"
+        else
+            sed -i "$(( $editableIndex + 1 ))s/^/$playername\,$_score\n/" "$HIGHSCORE_LOG"
+        fi
+
+        _score=0
+    fi
+
+    navigateMenu 'SCORES_OPTIONS'
     setState 'MAIN'
+}
+
+printScore()
+{
+    local                   \
+        bit                 \
+        bold=${6:-false}    \
+        hrScore             \
+        index=$3            \
+        name="$4"           \
+        pad                 \
+        paddedScore         \
+        score=$5            \
+        spacer              \
+        y=$1                \
+        x=$2
+
+    # Make the score human readable
+    for (( bit = ${#score}; bit > 0; bit-- )); do
+        (( $bit < ${#score} && $bit % 3 == 0 )) && hrScore+=","
+        hrScore+="${score: -$bit:1}"
+    done
+
+    (( pad = ${SCORES[WIDTH]} - (4 + ${#name} + ${#hrScore}) ))
+    eval printf -v spacer '%.0s.' {1..$pad}
+    printf -v paddedScore '%-4s%s%s%s' "$index" "$name" "$spacer" "$hrScore"
+    $bold && paddedScore="\e[1m$paddedScore"
+
+    navigateTo $y $x
+    renderText "$paddedScore"
+}
+
+textEntry()
+{
+    local               \
+        inputString     \
+        key             \
+        maxLength=$3    \
+        nameRef=$4      \
+        y=$1            \
+        x=$2
+
+    navigateTo $y $x
+
+    # Turn echo back on for text input
+    stty echo
+    tput cvvis
+    printf '\e[1m'
+    clearBuffer
+
+    # Clear IFS to avoid whitespace treated as null
+    while IFS= read -sn1 key; do
+        if [ -z "$key" ]; then
+            if (( ${#inputString} )); then
+                break
+            else
+                navigateTo $y $x
+            fi
+        # If backspace character is pressed, remove last entry
+        elif [[ "$key" == $'\177' ]]; then
+            if (( ${#inputString} )); then
+                printf '\b.\b'
+                inputString=${inputString:0: -1}
+            fi
+        elif (( ${#inputString} > $maxLength )); then
+            continue
+        elif [[ "$key" == [\ _] ]]; then
+            # Replace spaces with underscores
+            printf '_'
+            inputString+="_"
+        elif [[ "$key" == [[:punct:]] ]]; then
+            # Disallow punctuation
+            continue
+        elif [[ "$key" == [[:alnum:]] ]]; then
+            printf "$key"
+            inputString+="$key"
+        fi
+    done
+
+    printf -v "$nameRef" '%s' "$inputString"
+    printf '\e[0m'
+    tput civis
+    stty -echo
 }
 
 renderSettings()
@@ -109,12 +265,6 @@ renderSettings()
     esac
 }
 
-renderEnd()
-{
-    clearBuffer
-    setState 'MAIN'
-}
-
 renderScreen()
 {
     case $_state in
@@ -123,7 +273,6 @@ renderScreen()
         1)  renderField;;
         2)  renderScores;;
         3)  renderSettings;;
-        4)  renderEnd;;
     esac
 }
 

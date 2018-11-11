@@ -5,6 +5,15 @@
         True if script is to be run in debug mode
 TetrisDoc
 
+if (( ${BASH_VERSINFO[0]} < 4 )); then
+    echo 'Incorrect Bash version. Requires 4.3 or later'
+    exit 1
+fi
+if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
+    echo 'Incorrect Bash version. Requires 4.3 or later'
+    exit 1
+fi
+
 extrap()
 {
     stty sane
@@ -25,7 +34,7 @@ declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
 declare -g _rotation=
-declare -g _score=
+declare -g _score=0
 declare -g _state=0
 
 declare -Ag _selected=(
@@ -158,7 +167,7 @@ gameLoop()
             if (( $? )); then
                 renderPiece "$_currentPiece" $_pieceY $_pieceX
                 alert 'GAME_OVER'
-                setState 'GAME_OVER'
+                setState 'SCORES'
                 return;
             fi
 
@@ -193,11 +202,11 @@ gameLoop()
             # If enter or space is pressed
             if test -z "$key1" || [[ "$key1" == " " ]]; then
                 rotatePiece
+            elif [[ "$key1" == [Pp] ]] && test -z "$key2" -a -n "$key3"; then
+                pause
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
-                if test -z "$key2"; then
-                    pause
-                else
+                if test -n "$key2"; then
                     updatePosition=true
                     case $key3 in
                         B)  direction='D';; # Down
@@ -232,7 +241,6 @@ newGame()
 {
     _level=0
     _lines=0
-    _score=0
     eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
     # scoreModifier false
