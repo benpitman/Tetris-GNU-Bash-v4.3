@@ -117,11 +117,8 @@ renderEnd()
 
 renderScreen()
 {
-    local screen=''
-
-    clearScreen
-
     case $_state in
+        *)  clearScreen;;&
         0)  renderMain;;
         1)  renderField;;
         2)  renderScores;;

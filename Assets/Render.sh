@@ -37,6 +37,23 @@ levelUp()
     renderText "$paddedText"
 }
 
+scoreUp()
+{
+    local modifier paddedText
+
+    case $1 in
+        1)  modifier=40;;
+        2)  modifier=100;;
+        3)  modifier=300;;
+        4)  modifier=1200;;
+    esac
+
+    (( _score += $modifier * ($_level + 1) ))
+    navigateTo ${FIELD_OPTIONS[SCORE,Y]} ${FIELD_OPTIONS[SCORE,X]}
+    printf -v paddedText "%${FIELD_OPTIONS[SCORE,WIDTH]}s" $_score
+    renderText "$paddedText"
+}
+
 lineUp()
 {
     local           \
@@ -46,6 +63,8 @@ lineUp()
     for (( l = 0; l < $1; l++ )); do
         (( ++_lines % 10 == 0 )) && levelUp
     done
+
+    scoreUp $1
     case $1 in
         1)  alert 'SINGLE' &;;
         2)  alert 'DOUBLE' &;;
@@ -134,8 +153,10 @@ checkLines()
         $line && toDestroy[$yPos]=
     done
 
-    (( ${#toDestroy[@]} )) && destroyLines ${!toDestroy[@]}
-    lineUp ${#toDestroy[@]}
+    if (( ${#toDestroy[@]} )); then
+        destroyLines ${!toDestroy[@]}
+        lineUp ${#toDestroy[@]}
+    fi
 }
 
 lockPiece()
