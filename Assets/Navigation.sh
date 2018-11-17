@@ -24,8 +24,8 @@ navigateMenu()
         test -z "$key1" && break
 
         case $key3 in
-            A)  (( $selected == 0 ? selected = ${menuOptions[MAX]} : selected-- ));; # Up
-            B)  (( $selected == ${menuOptions[MAX]} ? selected = 0 : selected++ ));; # Down
+            $UP)    (( $selected == 0 ? selected = ${menuOptions[MAX]} : selected-- ));;
+            $DOWN)  (( $selected == ${menuOptions[MAX]} ? selected = 0 : selected++ ));;
         esac
     done
 
@@ -57,7 +57,7 @@ renderPartial()
         renderText "${partialOptions[CLEAR]}"
     done
 
-    for (( p = 0; $p < ${partialOptions[CLEAR,MAX]}; p++ )); do
+    for (( p = 0; $p < (${partialOptions[MAX]} + 1); p++ )); do
         optionText="${!partialOptions[$p]}"
         half=$(( (${partialOptions[WIDTH]} - ${#optionText}) / 2 ))
         navigateTo ${partialOptions[$p,Y]} $(( ${partialOptions[$p,X]} + $half + 1 ))
@@ -202,7 +202,7 @@ textEntry()
         y=$1            \
         x=$2
 
-    navigateTo $y $x
+    navigateTo $y $x false
 
     # Turn echo back on for text input
     stty echo
@@ -216,7 +216,7 @@ textEntry()
             if (( ${#inputString} )); then
                 break
             else
-                navigateTo $y $x
+                navigateTo $y $x false
             fi
         # If backspace character is pressed, remove last entry
         elif [[ "$key" == $'\177' ]]; then
@@ -256,9 +256,10 @@ renderSettings()
     case ${_selected[settings]} in
         0|1)    clearSubMenu 'SETTINGS_CLEAR_SUB_MENU';;&
         0)      navigateMenu 'SETTINGS_COLOUR_SUB_OPTIONS'
-                _colourMode=${COLOUR_MODES[$?]}
+                setColourMode $?
                 setColours;;
-        1)      navigateMenu 'SETTINGS_GAME_SUB_OPTIONS';;
+        1)      navigateMenu 'SETTINGS_GAME_SUB_OPTIONS'
+                setGameMode $?;;
         2)      setState 'MAIN'
                 _selected['settings']=0
                 return;; # Return to main menu

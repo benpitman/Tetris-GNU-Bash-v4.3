@@ -6,6 +6,10 @@ declare -rg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
 declare -rg SETTINGS_LOG="$LOG_DIR/settings.txt"
 declare -rg ERROR_LOG="$LOG_DIR/error.log"
 declare -rg DEBUG_LOG="$LOG_DIR/debug.log"
+declare -rg UP='A'
+declare -rg DOWN='B'
+declare -rg RIGHT='C'
+declare -rg LEFT='D'
 
 if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
     declare -rg LEGACY=true
@@ -242,6 +246,7 @@ setColourMode()
 
 declare -arg GAME_MODES=(
     'NORMAL'
+    'ROTATE'
 )
 setGameMode()
 {
@@ -323,12 +328,16 @@ declare -Arg SETTINGS_CLEAR_SUB_MENU=(
 
 # Clears the chosen items for repopulation
 declare -Arg SETTINGS_SUB_MENU=(
-    ['MAX']=0
+    ['MAX']=1
     ['WIDTH']=11
 
     ['0']='_colourMode'
     ['0,Y']=10
     ['0,X']=26
+
+    ['1']='_gameMode'
+    ['1,Y']=12
+    ['1,X']=26
 
     ['CLEAR']='              '
     ['CLEAR,Y']=9
@@ -363,6 +372,10 @@ declare -Arg SETTINGS_GAME_SUB_OPTIONS=(
     ['0']='  NORMAL  '
     ['0,Y']=11
     ['0,X']=27
+
+    ['1']='  ROTATE  '
+    ['1,Y']=13
+    ['1,X']=27
 )
 
 declare -Arg SCORES_OPTIONS=(

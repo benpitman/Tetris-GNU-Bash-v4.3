@@ -1,9 +1,10 @@
 alert()
 {
     local                   \
+        key1                \
         paddedText          \
         sticky=${2:-false}  \
-        key1
+        unstick=${3:-''}
 
     navigateTo ${FIELD_OPTIONS[ALERT,Y]} ${FIELD_OPTIONS[ALERT,X]}
     renderText "\e[1m${FIELD_OPTIONS[ALERT,$1]}\e[0m"
@@ -11,8 +12,9 @@ alert()
     if $sticky; then
         while IFS= read -rsn1 key1; do
             IFS= read -rsn1 -t0.0001 key2
-            test -z "$key2" && [[ "$key1" == $'\e' ]] && break
+            [[ "$key1" == $'\e' || "$key1" == $unstick ]] || test -z "$key1" -a -z "$key2" && break
         done
+        clearBuffer
     else
         sleep 2
     fi
@@ -24,7 +26,7 @@ alert()
 
 pause()
 {
-    alert 'PAUSED' true
+    alert 'PAUSED' true '[Pp]'
 }
 
 levelUp()
@@ -39,7 +41,9 @@ levelUp()
 
 scoreUp()
 {
-    local modifier paddedText
+    local           \
+        modifier    \
+        paddedText
 
     case $1 in
         1)  modifier=40;;
@@ -60,11 +64,11 @@ lineUp()
         l           \
         paddedText
 
+    scoreUp $1
     for (( l = 0; l < $1; l++ )); do
         (( ++_lines % 10 == 0 )) && levelUp
     done
 
-    scoreUp $1
     case $1 in
         1)  alert 'SINGLE' &;;
         2)  alert 'DOUBLE' &;;
@@ -246,10 +250,13 @@ renderNextPiece()
 
 navigateTo()
 {
+    while $_lockCursor; do sleep 0.001; done # Do nothing until cursor is unlocked
+    _lockCursor=${3:-true}
     printf '\e[%s;%sH' $1 $2
 }
 
 renderText()
 {
+    _lockCursor=false
     printf "${COLOURS[0]}%b\e[0m\n" "$@"
 }

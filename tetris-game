@@ -26,10 +26,11 @@ trap extrap EXIT
 declare -g _colourMode=
 declare -g _currentPiece=
 declare -g _debug=${1:-false}
-declare -g _gameMode=
+declare -g _gameMode='NORMAL'
 declare -g _inTTY=
 declare -g _level=
 declare -g _lines=
+declare -g _lockCursor=false
 declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
@@ -48,17 +49,13 @@ declare -Ag _lock
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
 
-if test -s "$SETTINGS_LOG"; then
-    :
+# If game is loaded on a terminal outside of a GUI environment
+if test -z "$DISPLAY" || [[ "$TERM" == "linux" ]]; then
+    _inTTY=true
+    _colourMode='SIMPLE'
 else
-    # If game is loaded on a terminal outside of a GUI environment
-    if test -z "$DISPLAY" || [[ "$TERM" == "linux" ]]; then
-        _inTTY=true
-        _colourMode='SIMPLE'
-    else
-        _inTTY=false
-        _colourMode='NORMAL'
-    fi
+    _inTTY=false
+    _colourMode='NORMAL'
 fi
 
 # Import the assets
@@ -69,6 +66,10 @@ unset asset
 
 setColours
 touch "$HIGHSCORE_LOG" # Create score log if doesn't exist
+
+if test -s "$SETTINGS_LOG"; then
+    : # Populate settings based of a file if it exists
+fi
 
 if $_debug; then
     exec 2>~/debug.log
@@ -105,6 +106,10 @@ movePiece()
 
 rotatePiece()
 {
+    if [[ "$_gameMode" == 'ROTATE' ]]; then
+        (( $_rotation == 3 )) && return
+    fi
+
     local                           \
         captureRotation=$_rotation  \
         posX=$_pieceX               \
@@ -155,7 +160,7 @@ gameLoop()
         newPiece=true           \
         postTime                \
         preTime                 \
-        readPid                 \
+        readStatus              \
         speed                   \
         tick                    \
         timeTaken=0
@@ -193,25 +198,28 @@ gameLoop()
 
         # Read STDIN with the timeout relative to the speed
         IFS= read -rsn1 -t0.$tick key1
-        readPid=$?
-        IFS= read -rsn1 -t0.0001 key2
-        IFS= read -rsn1 -t0.0001 key3
+        readStatus=$?
+        IFS= read -rsn1 -t0.001 key2
+        IFS= read -rsn1 -t0.001 key3
 
         # If read timeout was interrupted
-        if (( $readPid != 142 )); then
+        if (( $readStatus != 142 )); then
             # If enter or space is pressed
             if test -z "$key1" || [[ "$key1" == " " ]]; then
                 rotatePiece
-            elif [[ "$key1" == [Pp] ]] && test -z "$key2" -a -n "$key3"; then
+            elif [[ "$key1" == [Pp] ]] && test -z "$key2" -a -z "$key3"; then
                 pause
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]]; then
                 if test -n "$key2"; then
-                    updatePosition=true
                     case $key3 in
-                        B)  direction='D';; # Down
-                        C)  direction='R';; # Right
-                        D)  direction='L';; # Left
+                        $UP)    :;; # Drop
+                        $DOWN)  direction='D'
+                                updatePosition=true;;
+                        $RIGHT) direction='R'
+                                updatePosition=true;;
+                        $LEFT)  direction='L'
+                                updatePosition=true;;
                     esac
                 fi
             fi
