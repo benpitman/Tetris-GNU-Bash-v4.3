@@ -89,10 +89,10 @@ movePiece()
         nextY=$_pieceY
 
     case $direction in
-        'D')    timeTaken=0 # Reset timer
+        $DOWN)  timeTaken=0 # Reset timer
                 (( nextY++ ));;
-        'R')    (( nextX += 2 ));;
-        'L')    (( nextX -= 2 ));;
+        $RIGHT) (( nextX += 2 ));;
+        $LEFT)  (( nextX -= 2 ));;
     esac
 
     canRender "$_currentPiece" $nextY $nextX
@@ -102,7 +102,7 @@ movePiece()
         renderPiece "$_currentPiece" $nextY $nextX
         _pieceX=$nextX
         _pieceY=$nextY
-    elif [[ "$direction" == 'D' ]]; then
+    elif [[ "$direction" == "$DOWN" ]]; then
         lockPiece "$_currentPiece" $_pieceY $_pieceX
         newPiece=true
     fi
@@ -140,6 +140,21 @@ rotatePiece()
     _pieceY=$posY
 
     renderPiece "$_currentPiece" $_pieceY $_pieceX
+}
+
+dropPiece()
+{
+    local nextY=$_pieceY
+
+    removePiece "$_currentPiece" $_pieceY $_pieceX
+
+    while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
+        _pieceY=$nextY
+    done
+
+    renderPiece "$_currentPiece" $_pieceY $_pieceX
+    lockPiece "$_currentPiece" $_pieceY $_pieceX
+    newPiece=true
 }
 
 setDefaults()
@@ -214,18 +229,16 @@ gameLoop()
             elif [[ "$key1" == [Pp] ]] && test -z "$key2" -a -z "$key3"; then
                 pause
             # If escape character is pressed
-            elif [[ "$key1" == $'\e' ]]; then
-                if test -n "$key2"; then
-                    case $key3 in
-                        $UP)    :;; # Drop
-                        $DOWN)  direction='D'
-                                updatePosition=true;;
-                        $RIGHT) direction='R'
-                                updatePosition=true;;
-                        $LEFT)  direction='L'
-                                updatePosition=true;;
-                    esac
-                fi
+            elif [[ "$key1" == $'\e' ]] && test -n "$key2"; then
+                case $key3 in
+                    $UP)    dropPiece;;
+                    $DOWN)  direction=$DOWN
+                            updatePosition=true;;
+                    $RIGHT) direction=$RIGHT
+                            updatePosition=true;;
+                    $LEFT)  direction=$LEFT
+                            updatePosition=true;;
+                esac
             fi
         fi
 
@@ -241,7 +254,7 @@ gameLoop()
 
         if (( $timeTaken >= $speed )); then
             updatePosition=true
-            direction='D'
+            direction=$DOWN
             timeTaken=0
         fi
         unset key1 key2 key3

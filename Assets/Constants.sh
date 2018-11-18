@@ -469,6 +469,7 @@ declare -Arg NEXT_PIECE=(
 ################################ Tetrominoes ###################################
 
 declare -rg BLANK='\u0020\u0020'
+declare -rg GHOST='\u2592\u2592'
 declare -rg BLOCK='\u2588\u2588'
 
 setColours()

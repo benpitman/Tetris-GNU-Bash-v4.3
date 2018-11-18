@@ -285,5 +285,5 @@ clearScreen()
 
 clearBuffer()
 {
-    read -n10000 -t0.0001 # Clear input buffer
+    read -n10000 -t0.001 # Clear input buffer
 }

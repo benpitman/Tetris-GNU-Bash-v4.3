@@ -216,22 +216,19 @@ canRender()
 renderPiece()
 {
     local -n piece="$1"
-    local                   \
-        coord               \
-        tile                \
-        reset=${4:-false}   \
-        x=$3                \
-        xAx                 \
-        y=$2                \
+    local                       \
+        coord                   \
+        tile                    \
+        tileType=${4:-BLOCK}    \
+        x=$3                    \
+        xAx                     \
+        y=$2                    \
         yAx
 
     for coord in ${piece[$_rotation]}; do
-        IFS=, read -r xAx yAx <<< "$coord"
-        if $reset; then
-            tile="${BLANK}"
-        else
-            tile="${COLOURS[${COLOURS_LOOKUP[$1]}]}${BLOCK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
-        fi
+        tile="${COLOURS[${COLOURS_LOOKUP[$1]}]}${!tileType}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+
+        IFS=, read -r xAx yAx <<< $coord
         navigateTo $(( $y + $yAx )) $(( $x + ($xAx * 2) ))
         renderText "$tile"
     done
@@ -239,7 +236,7 @@ renderPiece()
 
 removePiece()
 {
-    renderPiece "$1" $2 $3 true
+    renderPiece "$1" $2 $3 'BLANK'
 }
 
 renderNextPiece()
