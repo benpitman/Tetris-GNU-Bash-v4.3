@@ -30,6 +30,8 @@ declare -g _colourMode=
 declare -g _currentPiece=
 declare -g _debug=${1:-false}
 declare -g _gameMode='NORMAL'
+declare -g _ghosting='ACTIVE'
+declare -g _ghostY=
 declare -g _inTTY=
 declare -g _level=
 declare -g _lines=
@@ -99,9 +101,13 @@ movePiece()
 
     if (( $? == 0 )); then
         removePiece "$_currentPiece" $_pieceY $_pieceX
-        renderPiece "$_currentPiece" $nextY $nextX
+        [[ "$direction" != "$DOWN" ]] && ghostingIsOn && removePiece "$_currentPiece" $_ghostY $_pieceX
+
         _pieceX=$nextX
         _pieceY=$nextY
+
+        [[ "$direction" != "$DOWN" ]] && ghostingIsOn && ghostPiece
+        renderPiece "$_currentPiece" $_pieceY $_pieceX
     elif [[ "$direction" == "$DOWN" ]]; then
         lockPiece "$_currentPiece" $_pieceY $_pieceX
         newPiece=true
@@ -120,6 +126,7 @@ rotatePiece()
         posY=$_pieceY
 
     removePiece "$_currentPiece" $_pieceY $_pieceX
+    ghostingIsOn && removePiece "$_currentPiece" $_ghostY $_pieceX
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
@@ -139,6 +146,7 @@ rotatePiece()
     _pieceX=$posX
     _pieceY=$posY
 
+    ghostingIsOn && ghostPiece
     renderPiece "$_currentPiece" $_pieceY $_pieceX
 }
 
@@ -155,6 +163,22 @@ dropPiece()
     renderPiece "$_currentPiece" $_pieceY $_pieceX
     lockPiece "$_currentPiece" $_pieceY $_pieceX
     newPiece=true
+}
+
+ghostPiece()
+{
+    local               \
+        firstLoop=true  \
+        nextY=$_pieceY
+
+    _ghostY=$nextY
+    while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
+        firstLoop=false
+        _ghostY=$nextY
+    done
+    $firstLoop && return
+
+    renderGhost "$_currentPiece" $_ghostY $_pieceX
 }
 
 setDefaults()
@@ -196,6 +220,7 @@ gameLoop()
             fi
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
+            ghostingIsOn && ghostPiece
             renderNextPiece
             clearBuffer
         elif $updatePosition; then
@@ -226,6 +251,7 @@ gameLoop()
             # If enter or space is pressed
             if test -z "$key1" || [[ "$key1" == " " ]]; then
                 rotatePiece
+                sleep 0.05
             elif [[ "$key1" == [Pp] ]] && test -z "$key2" -a -z "$key3"; then
                 pause
             # If escape character is pressed
@@ -257,6 +283,7 @@ gameLoop()
             direction=$DOWN
             timeTaken=0
         fi
+
         unset key1 key2 key3
     done
 }

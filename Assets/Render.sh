@@ -234,6 +234,11 @@ renderPiece()
     done
 }
 
+renderGhost()
+{
+    renderPiece "$1" $2 $3 'GHOST'
+}
+
 removePiece()
 {
     renderPiece "$1" $2 $3 'BLANK'

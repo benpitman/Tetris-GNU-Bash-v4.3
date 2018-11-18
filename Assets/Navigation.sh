@@ -261,7 +261,8 @@ renderSettings()
                 setColours;;
         1)      navigateMenu 'SETTINGS_GAME_SUB_MENU'
                 setGameMode $?;;
-        2)      setState 'MAIN'
+        2)      toggleGhosting;;
+        3)      setState 'MAIN'
                 _selected['settings']=0
                 return;; # Return to main menu
     esac

@@ -1,4 +1,4 @@
-#################################### Logs ######################################
+################################## GENERAL #####################################
 
 declare -rg PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
 declare -rg LOG_DIR='/var/games/tetris'
@@ -243,6 +243,16 @@ setGameMode()
     _gameMode=${GAME_MODES[$1]}
 }
 
+toggleGhosting()
+{
+    ghostingIsOn && _ghosting=${GHOST_MODES[1]} || _ghosting=${GHOST_MODES[0]}
+}
+
+ghostingIsOn()
+{
+    [[ "$_ghosting" == 'ACTIVE' ]] && true || false
+}
+
 declare -Arg STATES=(
     ['MAIN']=0
     ['FIELD']=1
@@ -287,12 +297,13 @@ declare -Arg MAIN_MENU=(
 declare -arg SETTINGS_OPTIONS=(
     'COLOUR  MODE'
     'GAME  MODE'
+    'GHOSTING'
     'BACK'
 )
 
 # Settings menu options
 declare -Arg SETTINGS_MENU=(
-    ['MAX']=2
+    ['MAX']=3
     ['OPTIONS']='SETTINGS_OPTIONS'
     ['PADDING']=' '
 
@@ -302,8 +313,11 @@ declare -Arg SETTINGS_MENU=(
     ['1,Y']=12
     ['1,X']=6
 
-    ['2,Y']=22
-    ['2,X']=9
+    ['2,Y']=14
+    ['2,X']=7
+
+    ['3,Y']=22
+    ['3,X']=9
 )
 
 # Opens up the submenu for selection
@@ -328,7 +342,7 @@ declare -Arg SETTINGS_CLEAR_SUB_MENU=(
 
 # Clears the chosen items for repopulation
 declare -Arg SETTINGS_SUB_MENU=(
-    ['MAX']=1
+    ['MAX']=2
     ['WIDTH']=11
 
     ['0']='_colourMode'
@@ -338,6 +352,10 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['1']='_gameMode'
     ['1,Y']=12
     ['1,X']=26
+
+    ['2']='_ghosting'
+    ['2,Y']=14
+    ['2,X']=26
 
     ['CLEAR']='              '
     ['CLEAR,Y']=9
@@ -394,6 +412,11 @@ declare -Arg SETTINGS_GAME_SUB_MENU=(
 
     ['3,Y']=17
     ['3,X']=27
+)
+
+declare -arg GHOST_MODES=(
+    'ACTIVE'
+    'INACTIVE'
 )
 
 declare -arg SCORES_OPTIONS=(
