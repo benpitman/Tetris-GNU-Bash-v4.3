@@ -94,7 +94,7 @@ destroyLines()
         yPos        \
         zeroes=0
 
-    if ! [[ "$_colourMode" =~ (NOIR|BLEACH) ]]; then
+    if ! [[ "$_colourMode" =~ (${COLOUR_MODES[2]}|${COLOUR_MODES[3]}) ]]; then
         for xPos in {2..20..2}; do
             for yPos in $*; do
                 navigateTo $yPos $xPos

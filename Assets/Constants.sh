@@ -233,24 +233,14 @@ fi
 
 ############################## States and Modes ################################
 
-declare -arg COLOUR_MODES=(
-    'NORMAL'
-    'SIMPLE'
-    'NOIR'
-    'BLEACH'
-)
 setColourMode()
 {
-    _colourMode=${COLOUR_MODES[$1]}
+    _colourMode=${SETTINGS_COLOUR_SUB_OPTIONS[$1]}
 }
 
-declare -arg GAME_MODES=(
-    'NORMAL'
-    'ROTATE'
-)
 setGameMode()
 {
-    _gameMode=${GAME_MODES[$1]}
+    _gameMode=${SETTINGS_GAME_SUB_OPTIONS[$1]}
 }
 
 declare -Arg STATES=(
@@ -269,41 +259,51 @@ setState()
 
 declare -rg START_POSITION='2,8'
 
-declare -Arg MAIN_OPTIONS=(
+declare -arg MAIN_OPTIONS=(
+    'N E W   G A M E'
+    'S C O R E S'
+    'S E T T I N G S'
+    'Q U I T'
+)
+
+declare -Arg MAIN_MENU=(
     ['MAX']=3
+    ['OPTIONS']='MAIN_OPTIONS'
+    ['PADDING']=' '
 
-    ['0']=' N E W   G A M E '
     ['0,Y']=11
-    ['0,X']=13
+    ['0,X']=12
 
-    ['1']=' S C O R E S '
     ['1,Y']=14
-    ['1,X']=15
+    ['1,X']=14
 
-    ['2']=' S E T T I N G S '
     ['2,Y']=17
-    ['2,X']=13
+    ['2,X']=12
 
-    ['3']=' Q U I T '
     ['3,Y']=20
-    ['3,X']=17
+    ['3,X']=16
+)
+
+declare -arg SETTINGS_OPTIONS=(
+    'COLOUR  MODE'
+    'GAME  MODE'
+    'BACK'
 )
 
 # Settings menu options
-declare -Arg SETTINGS_OPTIONS=(
+declare -Arg SETTINGS_MENU=(
     ['MAX']=2
+    ['OPTIONS']='SETTINGS_OPTIONS'
+    ['PADDING']=' '
 
-    ['0']=' COLOUR  MODE '
     ['0,Y']=10
-    ['0,X']=6
+    ['0,X']=5
 
-    ['1']=' GAME  MODE '
     ['1,Y']=12
-    ['1,X']=7
+    ['1,X']=6
 
-    ['2']=' BACK '
     ['2,Y']=22
-    ['2,X']=10
+    ['2,X']=9
 )
 
 # Opens up the submenu for selection
@@ -345,45 +345,68 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['CLEAR,MAX']=11
 )
 
-# Settings colour mode submenu options
-declare -Arg SETTINGS_COLOUR_SUB_OPTIONS=(
-    ['MAX']=3
+declare -arg SETTINGS_COLOUR_SUB_OPTIONS=(
+    'NORMAL'
+    'SIMPLE'
+    'SHADOW'
+    'BLEACH'
+)
 
-    ['0']='  NORMAL  '
+# Settings colour mode submenu options
+declare -Arg SETTINGS_COLOUR_SUB_MENU=(
+    ['MAX']=3
+    ['OPTIONS']='SETTINGS_COLOUR_SUB_OPTIONS'
+    ['PADDING']='  '
+
     ['0,Y']=11
     ['0,X']=27
 
-    ['1']='  SIMPLE  '
     ['1,Y']=13
     ['1,X']=27
 
-    ['2']='   NOIR   '
     ['2,Y']=15
     ['2,X']=27
 
-    ['3']='  BLEACH  '
     ['3,Y']=17
     ['3,X']=27
 )
 
-declare -Arg SETTINGS_GAME_SUB_OPTIONS=(
-    ['MAX']=1
+declare -arg SETTINGS_GAME_SUB_OPTIONS=(
+    'NORMAL'
+    'ROTATE'
+    'RECORD'
+    'FORGET'
+)
 
-    ['0']='  NORMAL  '
+declare -Arg SETTINGS_GAME_SUB_MENU=(
+    ['MAX']=1
+    ['OPTIONS']='SETTINGS_GAME_SUB_OPTIONS'
+    ['PADDING']='  '
+
     ['0,Y']=11
     ['0,X']=27
 
-    ['1']='  ROTATE  '
     ['1,Y']=13
     ['1,X']=27
+
+    ['2,Y']=15
+    ['2,X']=27
+
+    ['3,Y']=17
+    ['3,X']=27
 )
 
-declare -Arg SCORES_OPTIONS=(
-    ['MAX']=0
+declare -arg SCORES_OPTIONS=(
+    'BACK'
+)
 
-    ['0']=' BACK '
+declare -Arg SCORES_MENU=(
+    ['MAX']=0
+    ['OPTIONS']='SCORES_OPTIONS'
+    ['PADDING']=' '
+
     ['0,Y']=22
-    ['0,X']=19
+    ['0,X']=18
 )
 
 declare -Arg SCORES=(
@@ -477,7 +500,7 @@ setColours()
                 [8]=$'\e[0;97m'     # White
             )
         ;;
-        'NOIR')
+        'SHADOW')
             declare -ag COLOURS=(
                 [0]=$'\e[0;97m'   # white
                 [1]=$'\e[0;97m'

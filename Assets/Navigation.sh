@@ -1,6 +1,7 @@
 navigateMenu()
 {
-    local -n menuOptions="$1"
+    local -n menu="$1"
+    local -n menuOptions="${menu[OPTIONS]}"
     local                   \
         key1                \
         key2                \
@@ -10,10 +11,10 @@ navigateMenu()
         m
 
     while true; do
-        for (( m = 0; $m < (${menuOptions[MAX]} + 1); m++ )); do
+        for (( m = 0; $m < (${menu[MAX]} + 1); m++ )); do
             (( $m == $selected )) && optionText='\e[7m' || optionText='\e[27m'
-            optionText+="${menuOptions[$m]}\e[27m"
-            navigateTo ${menuOptions[$m,Y]} ${menuOptions[$m,X]}
+            optionText+="${menu[PADDING]}${menuOptions[$m]}${menu[PADDING]}\e[27m"
+            navigateTo ${menu[$m,Y]} ${menu[$m,X]}
             renderText "$optionText"
         done
 
@@ -24,8 +25,8 @@ navigateMenu()
         test -z "$key1" && break
 
         case $key3 in
-            $UP)    (( $selected == 0 ? selected = ${menuOptions[MAX]} : selected-- ));;
-            $DOWN)  (( $selected == ${menuOptions[MAX]} ? selected = 0 : selected++ ));;
+            $UP)    (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ));;
+            $DOWN)  (( $selected == ${menu[MAX]} ? selected = 0 : selected++ ));;
         esac
     done
 
@@ -69,7 +70,7 @@ renderMain()
 {
     renderText "${MAIN_SCREEN[@]}"
 
-    navigateMenu 'MAIN_OPTIONS' ${_selected[main]}
+    navigateMenu 'MAIN_MENU' ${_selected[main]}
     _selected['main']=$?
     case ${_selected[main]} in
         0)  setState 'FIELD';;      # New game
@@ -158,7 +159,7 @@ renderScores()
         _score=0
     fi
 
-    navigateMenu 'SCORES_OPTIONS'
+    navigateMenu 'SCORES_MENU'
     setState 'MAIN'
 }
 
@@ -250,15 +251,15 @@ renderSettings()
     renderText "${SETTINGS_SCREEN[@]}"
 
     renderPartial 'SETTINGS_SUB_MENU'
-    navigateMenu 'SETTINGS_OPTIONS' ${_selected[settings]}
+    navigateMenu 'SETTINGS_MENU' ${_selected[settings]}
     _selected['settings']=$?
 
     case ${_selected[settings]} in
         0|1)    clearSubMenu 'SETTINGS_CLEAR_SUB_MENU';;&
-        0)      navigateMenu 'SETTINGS_COLOUR_SUB_OPTIONS'
+        0)      navigateMenu 'SETTINGS_COLOUR_SUB_MENU'
                 setColourMode $?
                 setColours;;
-        1)      navigateMenu 'SETTINGS_GAME_SUB_OPTIONS'
+        1)      navigateMenu 'SETTINGS_GAME_SUB_MENU'
                 setGameMode $?;;
         2)      setState 'MAIN'
                 _selected['settings']=0
