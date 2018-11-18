@@ -13,7 +13,6 @@ if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
     echo 'Incorrect Bash version. Requires 4.3 or later'
     exit 1
 fi
-
 if test -n "$1" && ! [[ "$1" =~ [Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee] ]]; then
     echo 'First parameter must be a boolean'
     exit 1
@@ -27,7 +26,6 @@ extrap()
 }
 trap extrap EXIT
 
-# Debug mode sends STDERR to an error file
 declare -g _colourMode=
 declare -g _currentPiece=
 declare -g _debug=${1:-false}
@@ -77,6 +75,7 @@ if test -s "$SETTINGS_LOG"; then
 fi
 
 if $_debug; then
+    # Debug mode sends STDERR to an error file
     exec 2>~/debug.log
     set -xT
 else

@@ -235,12 +235,12 @@ fi
 
 setColourMode()
 {
-    _colourMode=${SETTINGS_COLOUR_SUB_OPTIONS[$1]}
+    _colourMode=${COLOUR_MODES[$1]}
 }
 
 setGameMode()
 {
-    _gameMode=${SETTINGS_GAME_SUB_OPTIONS[$1]}
+    _gameMode=${GAME_MODES[$1]}
 }
 
 declare -Arg STATES=(
@@ -345,7 +345,7 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['CLEAR,MAX']=11
 )
 
-declare -arg SETTINGS_COLOUR_SUB_OPTIONS=(
+declare -arg COLOUR_MODES=(
     'NORMAL'
     'SIMPLE'
     'SHADOW'
@@ -355,7 +355,7 @@ declare -arg SETTINGS_COLOUR_SUB_OPTIONS=(
 # Settings colour mode submenu options
 declare -Arg SETTINGS_COLOUR_SUB_MENU=(
     ['MAX']=3
-    ['OPTIONS']='SETTINGS_COLOUR_SUB_OPTIONS'
+    ['OPTIONS']='COLOUR_MODES'
     ['PADDING']='  '
 
     ['0,Y']=11
@@ -371,7 +371,7 @@ declare -Arg SETTINGS_COLOUR_SUB_MENU=(
     ['3,X']=27
 )
 
-declare -arg SETTINGS_GAME_SUB_OPTIONS=(
+declare -arg GAME_MODES=(
     'NORMAL'
     'ROTATE'
     'RECORD'
@@ -380,7 +380,7 @@ declare -arg SETTINGS_GAME_SUB_OPTIONS=(
 
 declare -Arg SETTINGS_GAME_SUB_MENU=(
     ['MAX']=1
-    ['OPTIONS']='SETTINGS_GAME_SUB_OPTIONS'
+    ['OPTIONS']='GAME_MODES'
     ['PADDING']='  '
 
     ['0,Y']=11
