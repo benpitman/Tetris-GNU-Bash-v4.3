@@ -459,6 +459,7 @@ declare -Arg FIELD_OPTIONS=(
     ['ALERT,TRIPLE']='T R I P L E'
     ['ALERT,TETRIS']='T E T R I S'
     ['ALERT,GAME_OVER']='GAME   OVER'
+    ['ALERT,CLEAR']='           '
     ['ALERT,X']=27
     ['ALERT,Y']=8
 )

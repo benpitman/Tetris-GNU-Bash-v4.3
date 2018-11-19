@@ -2,7 +2,6 @@ alert()
 {
     local                   \
         key1                \
-        paddedText          \
         sticky=${2:-false}  \
         unstick=${3:-''}
 
@@ -15,13 +14,7 @@ alert()
             [[ "$key1" == $'\e' || "$key1" == $unstick ]] || test -z "$key1" -a -z "$key2" && break
         done
         clearBuffer
-    else
-        sleep 2
     fi
-
-    navigateTo ${FIELD_OPTIONS[ALERT,Y]} ${FIELD_OPTIONS[ALERT,X]}
-    printf -v paddedText "%${#FIELD_OPTIONS[ALERT,$1]}s"
-    renderText "$paddedText"
 }
 
 pause()
@@ -70,11 +63,13 @@ lineUp()
     done
 
     case $1 in
-        1)  alert 'SINGLE' &;;
-        2)  alert 'DOUBLE' &;;
-        3)  alert 'TRIPLE' &;;
-        4)  alert 'TETRIS' &;;
+        1)  alert 'SINGLE';;
+        2)  alert 'DOUBLE';;
+        3)  alert 'TRIPLE';;
+        4)  alert 'TETRIS';;
     esac
+    printf -v _alertTimeout '%(%s)T' -1
+    (( _alertTimeout += 2 ))
 
     navigateTo ${FIELD_OPTIONS[LINES,Y]} ${FIELD_OPTIONS[LINES,X]}
     printf -v paddedText "%${FIELD_OPTIONS[LINES,WIDTH]}s" $_lines
@@ -225,9 +220,9 @@ renderPiece()
         y=$2                    \
         yAx
 
-    for coord in ${piece[$_rotation]}; do
-        tile="${COLOURS[${COLOURS_LOOKUP[$1]}]}${!tileType}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+    tile="${COLOURS[${COLOURS_LOOKUP[$1]}]}${!tileType}${COLOURS[${COLOURS_LOOKUP[R]}]}"
 
+    for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< $coord
         navigateTo $(( $y + $yAx )) $(( $x + ($xAx * 2) ))
         renderText "$tile"
@@ -252,13 +247,10 @@ renderNextPiece()
 
 navigateTo()
 {
-    while $_lockCursor; do sleep 0.001; done # Do nothing until cursor is unlocked
-    _lockCursor=${3:-true}
     printf '\e[%s;%sH' $1 $2
 }
 
 renderText()
 {
-    _lockCursor=false
     printf "${COLOURS[0]}%b\e[0m\n" "$@"
 }

@@ -26,6 +26,7 @@ extrap()
 }
 trap extrap EXIT
 
+declare -g _alertTimeout=0
 declare -g _colourMode=
 declare -g _currentPiece=
 declare -g _debug=${1:-false}
@@ -35,7 +36,6 @@ declare -g _ghostY=
 declare -g _inTTY=
 declare -g _level=
 declare -g _lines=
-declare -g _lockCursor=false
 declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
@@ -206,7 +206,8 @@ gameLoop()
         readStatus              \
         speed                   \
         tick                    \
-        timeTaken=0
+        timeTaken=0             \
+        unixTime
 
     while true; do
         if $newPiece; then
@@ -282,6 +283,9 @@ gameLoop()
             updatePosition=true
             direction=$DOWN
             timeTaken=0
+
+            printf -v unixTime '%(%s)T' -1
+            (( $unixTime >= $_alertTimeout )) && alert 'CLEAR'
         fi
 
         unset key1 key2 key3
