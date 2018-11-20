@@ -297,7 +297,7 @@ newGame()
 {
     _level=0
     _lines=0
-    eval _lock[{$CEILING..$FLOOR},{$L_WALL..$R_WALL..2}]=${COLOURS_LOOKUP[R]}
+    eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
     # scoreModifier false
     gameLoop

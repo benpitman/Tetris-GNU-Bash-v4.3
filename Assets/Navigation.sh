@@ -218,7 +218,7 @@ textEntry()
     # Turn echo back on for text input
     stty echo
     tput cvvis
-    printf '\e[1m'
+    printf "\e[1m${COLOURS[${COLOURS_LOOKUP[R]}]}"
     clearBuffer
 
     # Clear IFS to avoid whitespace treated as null
@@ -251,7 +251,7 @@ textEntry()
     done
 
     printf -v "$nameRef" '%s' "$inputString"
-    printf '\e[0m'
+    printf "${COLOURS[${COLOURS_LOOKUP[R]}]}"
     tput civis
     stty -echo
 }
