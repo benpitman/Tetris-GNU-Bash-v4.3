@@ -18,11 +18,21 @@ navigateMenu()
             renderText "$optionText"
         done
 
+        if test -n "${menu[$selected,NOTE]}"; then
+            navigateTo ${NOTE[Y]} $(( ${NOTE[X]} - (${#menu[$selected,NOTE]} / 2) ))
+            renderText "${menu[$selected,NOTE]}"
+        fi
+
         IFS= read -srn 1 key1
         IFS= read -srn 1 -t 0.001 key2
         IFS= read -srn 1 -t 0.001 key3
 
         test -z "$key1" && break
+
+        if test -n "${menu[$selected,NOTE]}"; then
+            navigateTo ${NOTE[Y]} $(( ${NOTE[X]} - (${#NOTE[CLEAR]} / 2) ))
+            renderText "${NOTE[CLEAR]}"
+        fi
 
         case $key3 in
             $UP)    (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ));;

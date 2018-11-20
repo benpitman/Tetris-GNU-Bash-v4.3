@@ -285,7 +285,7 @@ gameLoop()
             timeTaken=0
 
             printf -v unixTime '%(%s)T' -1
-            (( $unixTime >= $_alertTimeout )) && alert 'CLEAR'
+            (( $_alertTimeout && $unixTime >= $_alertTimeout )) && alert 'CLEAR'
         fi
 
         unset key1 key2 key3
@@ -297,7 +297,7 @@ newGame()
 {
     _level=0
     _lines=0
-    eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
+    eval _lock[{$CEILING..$FLOOR},{$L_WALL..$R_WALL..2}]=${COLOURS_LOOKUP[R]}
 
     # scoreModifier false
     gameLoop

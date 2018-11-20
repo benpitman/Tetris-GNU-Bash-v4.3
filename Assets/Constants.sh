@@ -10,6 +10,11 @@ declare -rg UP='A'
 declare -rg DOWN='B'
 declare -rg RIGHT='C'
 declare -rg LEFT='D'
+declare -rg CEILING=2
+declare -rg FLOOR=23
+declare -rg R_WALL=20
+declare -rg L_WALL=2
+eval declare -arg X_POSITIONS=({$L_WALL..$R_WALL..2})
 
 if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
     declare -rg LEGACY=true
@@ -315,6 +320,7 @@ declare -Arg SETTINGS_MENU=(
 
     ['2,Y']=14
     ['2,X']=7
+    ['2,NOTE']="(Can cause flicker)"
 
     ['3,Y']=22
     ['3,X']=9
@@ -363,6 +369,12 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['CLEAR,MAX']=11
 )
 
+declare -Arg NOTE=(
+    ['CLEAR']='                                        '
+    ['Y']=6
+    ['X']=22
+)
+
 declare -arg COLOUR_MODES=(
     'NORMAL'
     'SIMPLE'
@@ -378,15 +390,19 @@ declare -Arg SETTINGS_COLOUR_SUB_MENU=(
 
     ['0,Y']=11
     ['0,X']=27
+    ['0,NOTE']="Original Tetris colours"
 
     ['1,Y']=13
     ['1,X']=27
+    ['1,NOTE']="Reduced colours for lower colour depth"
 
     ['2,Y']=15
     ['2,X']=27
+    ['2,NOTE']="White on black"
 
     ['3,Y']=17
     ['3,X']=27
+    ['3,NOTE']="Black on white"
 )
 
 declare -arg GAME_MODES=(
@@ -403,15 +419,19 @@ declare -Arg SETTINGS_GAME_SUB_MENU=(
 
     ['0,Y']=11
     ['0,X']=27
+    ['0,NOTE']="It's just Tetris"
 
     ['1,Y']=13
     ['1,X']=27
+    ['1,NOTE']="Rotations limited to 3 per tetromino"
 
     ['2,Y']=15
     ['2,X']=27
+    ['2,NOTE']="All inputs are recorded for playback"
 
     ['3,Y']=17
     ['3,X']=27
+    ['3,NOTE']="Placed tetrominoes fade out over time"
 )
 
 declare -arg GHOST_MODES=(

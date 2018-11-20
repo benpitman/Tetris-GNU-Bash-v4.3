@@ -15,6 +15,8 @@ alert()
         done
         clearBuffer
     fi
+
+    [[ "$1" == 'GAME_OVER' ]] && sleep 2
 }
 
 pause()
@@ -90,7 +92,7 @@ destroyLines()
         zeroes=0
 
     if ! [[ "$_colourMode" =~ (${COLOUR_MODES[2]}|${COLOUR_MODES[3]}) ]]; then
-        for xPos in {2..20..2}; do
+        for xPos in ${X_POSITIONS[@]}; do
             for yPos in $*; do
                 navigateTo $yPos $xPos
                 renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLOCK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
@@ -100,7 +102,7 @@ destroyLines()
         sleep 0.04
     fi
 
-    for xPos in {2..20..2}; do
+    for xPos in ${X_POSITIONS[@]}; do
         for yPos in $*; do
             navigateTo $yPos $xPos
             renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLANK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
@@ -115,7 +117,7 @@ destroyLines()
             continue
         fi
 
-        for xPlus in {2..20..2}; do
+        for xPlus in ${X_POSITIONS[@]}; do
             colour=${_lock[$yPlus,$xPlus]}
             if (( $colour )); then
                 navigateTo $yPlus $xPlus
@@ -143,7 +145,7 @@ checkLines()
 
     for yPos in $*; do
         line=true
-        for xPos in {2..20..2}; do
+        for xPos in ${X_POSITIONS[@]}; do
             if ! (( ${_lock[$yPos,$xPos]} )); then
                 line=false
                 break
@@ -196,16 +198,14 @@ canRender()
         # Needs to check tetromino collision first for rotation
         if (( ${_lock[$yAx,$xAx]} )); then
             return 4
-        elif (( $xAx > 20 )); then # Right wall
+        elif (( $xAx > $R_WALL )); then # Right wall
             return 1
-        elif (( $xAx < 2 )); then # Left wall
+        elif (( $xAx < $L_WALL )); then # Left wall
             return 3
-        elif (( $yAx > 23 )); then # Floor
+        elif (( $yAx > $FLOOR )); then # Floor
             return 2
         fi
     done
-
-    return 0
 }
 
 renderPiece()
