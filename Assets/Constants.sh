@@ -6,6 +6,7 @@ declare -rg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
 declare -rg SETTINGS_LOG="$LOG_DIR/settings.txt"
 declare -rg ERROR_LOG="$LOG_DIR/error.log"
 declare -rg DEBUG_LOG="$LOG_DIR/debug.log"
+declare -rg INPUT_LOG="$LOG_DIR/input.log"
 declare -rg UP='A'
 declare -rg DOWN='B'
 declare -rg RIGHT='C'
@@ -258,6 +259,16 @@ ghostingIsOn()
     [[ "$_ghosting" == 'ACTIVE' ]] && true || false
 }
 
+loggingIsOn()
+{
+    [[ "$_logging" == 'ACTIVE' ]] && true || false
+}
+
+toggleLogging()
+{
+    loggingIsOn && _logging=${LOG_MODES[1]} || _logging=${LOG_MODES[0]}
+}
+
 declare -Arg STATES=(
     ['MAIN']=0
     ['FIELD']=1
@@ -265,6 +276,7 @@ declare -Arg STATES=(
     ['SETTINGS']=3
     ['GAME_OVER']=4
 )
+
 setState()
 {
     _state=${STATES[$1]}
@@ -303,12 +315,13 @@ declare -arg SETTINGS_OPTIONS=(
     'COLOUR  MODE'
     'GAME  MODE'
     'GHOSTING'
+    'RECORD'
     'BACK'
 )
 
 # Settings menu options
 declare -Arg SETTINGS_MENU=(
-    ['MAX']=3
+    ['MAX']=4
     ['OPTIONS']='SETTINGS_OPTIONS'
     ['PADDING']=' '
 
@@ -320,10 +333,14 @@ declare -Arg SETTINGS_MENU=(
 
     ['2,Y']=14
     ['2,X']=7
-    ['2,NOTE']="(Can cause flicker)"
+    ['2,NOTE']='(Can cause flicker)'
 
-    ['3,Y']=22
-    ['3,X']=9
+    ['3,Y']=16
+    ['3,X']=8
+    ['3,NOTE']='All inputs logged for playback'
+
+    ['4,Y']=22
+    ['4,X']=9
 )
 
 # Opens up the submenu for selection
@@ -348,7 +365,7 @@ declare -Arg SETTINGS_CLEAR_SUB_MENU=(
 
 # Clears the chosen items for repopulation
 declare -Arg SETTINGS_SUB_MENU=(
-    ['MAX']=2
+    ['MAX']=3
     ['WIDTH']=11
 
     ['0']='_colourMode'
@@ -362,6 +379,10 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['2']='_ghosting'
     ['2,Y']=14
     ['2,X']=26
+
+    ['3']='_logging'
+    ['3,Y']=16
+    ['3,X']=26
 
     ['CLEAR']='              '
     ['CLEAR,Y']=9
@@ -408,8 +429,7 @@ declare -Arg SETTINGS_COLOUR_SUB_MENU=(
 declare -arg GAME_MODES=(
     'NORMAL'
     'ROTATE'
-    'RECORD'
-    'FORGET'
+    'FORGET'    # May not be implemented
 )
 
 declare -Arg SETTINGS_GAME_SUB_MENU=(
@@ -423,18 +443,19 @@ declare -Arg SETTINGS_GAME_SUB_MENU=(
 
     ['1,Y']=13
     ['1,X']=27
-    ['1,NOTE']="Rotations limited to 3 per tetromino"
+    ['1,NOTE']="Limited to 3 rotations per tetromino"
 
-    ['2,Y']=15
+    ['2,Y']=17
     ['2,X']=27
-    ['2,NOTE']="All inputs are recorded for playback"
-
-    ['3,Y']=17
-    ['3,X']=27
-    ['3,NOTE']="Placed tetrominoes fade out over time"
+    ['2,NOTE']="Placed tetrominoes fade out over time"
 )
 
 declare -arg GHOST_MODES=(
+    'ACTIVE'
+    'INACTIVE'
+)
+
+declare -arg LOG_MODES=(
     'ACTIVE'
     'INACTIVE'
 )
@@ -479,6 +500,7 @@ declare -Arg FIELD_OPTIONS=(
     ['ALERT,TRIPLE']='T R I P L E'
     ['ALERT,TETRIS']='T E T R I S'
     ['ALERT,GAME_OVER']='GAME   OVER'
+    ['ALERT,END_REPLAY']='END  REPLAY'
     ['ALERT,CLEAR']='           '
     ['ALERT,X']=27
     ['ALERT,Y']=8

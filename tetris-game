@@ -3,6 +3,8 @@
 : <<'TetrisDoc'
     @Param      bool    1
         True if script is to be run in debug mode
+    @Param      string  2
+        Replay mode file to be used as input log
 TetrisDoc
 
 if (( ${BASH_VERSINFO[0]} < 4 )); then
@@ -36,9 +38,13 @@ declare -g _ghostY=
 declare -g _inTTY=
 declare -g _level=
 declare -g _lines=
+declare -g _logging='INACTIVE'
 declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
+declare -g _replay=false
+declare -g _replayIndex=0
+declare -ag _replayInputs=()
 declare -g _rotation=
 declare -g _score=0
 declare -g _state=0
@@ -50,6 +56,12 @@ declare -Ag _selected=(
 
 # Collision detection
 declare -Ag _lock
+
+if test -n "$2" -a -s "$2"; then
+    _replay=true
+    _replayInputs=( $( fold -b1 "$2" ) )
+    _state=1
+fi
 
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
@@ -112,6 +124,8 @@ movePiece()
         lockPiece "$_currentPiece" $_pieceY $_pieceX
         newPiece=true
     fi
+
+    loggingIsOn && logInput 'TRANSLATE'
 }
 
 rotatePiece()
@@ -148,6 +162,7 @@ rotatePiece()
 
     ghostingIsOn && ghostPiece
     renderPiece "$_currentPiece" $_pieceY $_pieceX
+    loggingIsOn && logInput 'ROTATE'
 }
 
 dropPiece()
@@ -163,6 +178,7 @@ dropPiece()
     renderPiece "$_currentPiece" $_pieceY $_pieceX
     lockPiece "$_currentPiece" $_pieceY $_pieceX
     newPiece=true
+    loggingIsOn && logInput 'TRANSLATE'
 }
 
 ghostPiece()
@@ -183,13 +199,73 @@ ghostPiece()
 
 setDefaults()
 {
-    test -n "$_nextPiece" && _currentPiece=$_nextPiece || _currentPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
-    _nextPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+    if $_replay; then
+        _currentPiece=${_replayInputs[$(( _replayIndex++ ))]}
+    else
+        test -n "$_nextPiece" && _currentPiece=$_nextPiece || _currentPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+        _nextPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+    fi
 
     # Starting geometry for new pieces
     _rotation=0
     IFS=',' read _pieceY _pieceX <<< $START_POSITION
     newPiece=false
+    loggingIsOn && logInput 'PIECE'
+}
+
+logInput()
+{
+    case "$1" in
+        'PIECE')        printf '%s' $_currentPiece;;
+        'TRANSLATE')    printf '%s' $direction;;
+        'ROTATE')       printf '%s' 'R';;
+    esac >> "$INPUT_LOG"
+}
+
+replayGameLoop()
+{
+    local                       \
+        direction               \
+        updatePosition=false    \
+        newPiece=true           \
+        unixTime
+
+    while true; do
+        if test -z "${_replayInputs[$_replayIndex]}"; then
+            alert 'END_REPLAY'
+            exit 0
+        fi
+        if $newPiece; then
+            setDefaults
+            canRender "$_currentPiece" $_pieceY $_pieceX
+            (( $? )) && continue
+
+            renderPiece "$_currentPiece" $_pieceY $_pieceX
+            ghostingIsOn && ghostPiece
+            clearBuffer
+        elif $updatePosition; then
+            movePiece
+            updatePosition=false
+            $newPiece && continue
+        fi
+
+        case ${_replayInputs[$(( _replayIndex++ ))]} in
+            'R')    rotatePiece;;
+            $UP)    direction=$UP
+                    dropPiece;;
+            $DOWN)  direction=$DOWN
+                    updatePosition=true;;
+            $RIGHT) direction=$RIGHT
+                    updatePosition=true;;
+            $LEFT)  direction=$LEFT
+                    updatePosition=true;;
+        esac
+
+        printf -v unixTime '%(%s)T' -1
+        (( $_alertTimeout && $unixTime >= $_alertTimeout )) && alert 'CLEAR'
+    done
+
+    sleep 0.05
 }
 
 gameLoop()
@@ -203,7 +279,7 @@ gameLoop()
         newPiece=true           \
         postTime                \
         preTime                 \
-        readStatus              \
+        readStatus=0            \
         speed                   \
         tick                    \
         timeTaken=0             \
@@ -217,7 +293,7 @@ gameLoop()
                 renderPiece "$_currentPiece" $_pieceY $_pieceX
                 alert 'GAME_OVER'
                 setState 'SCORES'
-                return;
+                return
             fi
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
@@ -258,7 +334,8 @@ gameLoop()
             # If escape character is pressed
             elif [[ "$key1" == $'\e' ]] && test -n "$key2"; then
                 case $key3 in
-                    $UP)    dropPiece;;
+                    $UP)    direction=$UP
+                            dropPiece;;
                     $DOWN)  direction=$DOWN
                             updatePosition=true;;
                     $RIGHT) direction=$RIGHT
@@ -298,9 +375,10 @@ newGame()
     _level=0
     _lines=0
     eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
+    loggingIsOn && : > "$INPUT_LOG"
 
     # scoreModifier false
-    gameLoop
+    $_replay && replayGameLoop || gameLoop
     return $?
 }
 

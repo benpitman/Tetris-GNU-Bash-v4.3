@@ -16,7 +16,7 @@ alert()
         clearBuffer
     fi
 
-    [[ "$1" == 'GAME_OVER' ]] && sleep 2
+    [[ "$1" == 'GAME_OVER' || "$1" == 'END_REPLAY' ]] && sleep 2
 }
 
 pause()
