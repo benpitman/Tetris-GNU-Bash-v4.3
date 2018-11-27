@@ -33,18 +33,20 @@ declare -g _colourMode=
 declare -g _currentPiece=
 declare -g _debug=${1:-false}
 declare -g _gameMode='NORMAL'
-declare -g _ghosting='ACTIVE'
+declare -g _ghosting='INACTIVE'
+declare -g _ghostingIsSet=false
 declare -g _ghostY=
 declare -g _inTTY=
 declare -g _level=
 declare -g _lines=
 declare -g _logging='INACTIVE'
+declare -g _loggingIsSet=false
 declare -g _nextPiece=
 declare -g _pieceX=
 declare -g _pieceY=
 declare -g _replay=false
 declare -g _replayIndex=0
-declare -ag _replayInputs=()
+declare -ag _replayInputs=
 declare -g _rotation=
 declare -g _score=0
 declare -g _state=0
@@ -53,9 +55,6 @@ declare -Ag _selected=(
     ['main']=0
     ['settings']=0
 )
-
-# Collision detection
-declare -Ag _lock
 
 if test -n "$2" -a -s "$2"; then
     _replay=true
@@ -84,8 +83,9 @@ unset asset
 setColours
 touch "$HIGHSCORE_LOG" # Create score log if doesn't exist
 
-if test -s "$SETTINGS_LOG"; then
-    : # Populate settings based of a file if it exists
+#TODO Populate settings based of a file if it exists
+if test -s "$SETTINGS_LOG" && ! $_replay; then
+    :
 fi
 
 if $_debug; then
@@ -113,19 +113,19 @@ movePiece()
 
     if (( $? == 0 )); then
         removePiece "$_currentPiece" $_pieceY $_pieceX
-        [[ "$direction" != "$DOWN" ]] && ghostingIsOn && removePiece "$_currentPiece" $_ghostY $_pieceX
+        [[ "$direction" != "$DOWN" ]] && $_ghostingIsSet && removePiece "$_currentPiece" $_ghostY $_pieceX
 
         _pieceX=$nextX
         _pieceY=$nextY
 
-        [[ "$direction" != "$DOWN" ]] && ghostingIsOn && ghostPiece
+        [[ "$direction" != "$DOWN" ]] && $_ghostingIsSet && ghostPiece
         renderPiece "$_currentPiece" $_pieceY $_pieceX
     elif [[ "$direction" == "$DOWN" ]]; then
         lockPiece "$_currentPiece" $_pieceY $_pieceX
         newPiece=true
     fi
 
-    loggingIsOn && logInput 'TRANSLATE'
+    $_loggingIsSet && logInput 'TRANSLATE'
 }
 
 rotatePiece()
@@ -140,7 +140,7 @@ rotatePiece()
         posY=$_pieceY
 
     removePiece "$_currentPiece" $_pieceY $_pieceX
-    ghostingIsOn && removePiece "$_currentPiece" $_ghostY $_pieceX
+    $_ghostingIsSet && removePiece "$_currentPiece" $_ghostY $_pieceX
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
@@ -160,9 +160,9 @@ rotatePiece()
     _pieceX=$posX
     _pieceY=$posY
 
-    ghostingIsOn && ghostPiece
+    $_ghostingIsSet && ghostPiece
     renderPiece "$_currentPiece" $_pieceY $_pieceX
-    loggingIsOn && logInput 'ROTATE'
+    $_loggingIsSet && logInput 'ROTATE'
 }
 
 dropPiece()
@@ -178,7 +178,7 @@ dropPiece()
     renderPiece "$_currentPiece" $_pieceY $_pieceX
     lockPiece "$_currentPiece" $_pieceY $_pieceX
     newPiece=true
-    loggingIsOn && logInput 'TRANSLATE'
+    $_loggingIsSet && logInput 'TRANSLATE'
 }
 
 ghostPiece()
@@ -210,7 +210,7 @@ setDefaults()
     _rotation=0
     IFS=',' read _pieceY _pieceX <<< $START_POSITION
     newPiece=false
-    loggingIsOn && logInput 'PIECE'
+    $_loggingIsSet && logInput 'PIECE'
 }
 
 logInput()
@@ -241,7 +241,7 @@ replayGameLoop()
             (( $? )) && continue
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
-            ghostingIsOn && ghostPiece
+            $_ghostingIsSet && ghostPiece
             clearBuffer
         elif $updatePosition; then
             movePiece
@@ -263,9 +263,9 @@ replayGameLoop()
 
         printf -v unixTime '%(%s)T' -1
         (( $_alertTimeout && $unixTime >= $_alertTimeout )) && alert 'CLEAR'
-    done
 
-    sleep 0.05
+        sleep 0.001
+    done
 }
 
 gameLoop()
@@ -297,7 +297,7 @@ gameLoop()
             fi
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
-            ghostingIsOn && ghostPiece
+            $_ghostingIsSet && ghostPiece
             renderNextPiece
             clearBuffer
         elif $updatePosition; then
@@ -320,8 +320,8 @@ gameLoop()
         # Read STDIN with the timeout relative to the speed
         IFS= read -rsn1 -t0.$tick key1
         readStatus=$?
-        IFS= read -rsn1 -t0.001 key2
-        IFS= read -rsn1 -t0.001 key3
+        IFS= read -rsn1 -t0.0001 key2
+        IFS= read -rsn1 -t0.0001 key3
 
         # If read timeout was interrupted
         if (( $readStatus != 142 )); then
@@ -372,10 +372,15 @@ gameLoop()
 # Set BLANK global variables to allow restarting
 newGame()
 {
-    _level=0
+    _level=18
     _lines=0
-    eval _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
-    loggingIsOn && : > "$INPUT_LOG"
+
+    # Collision detection
+    unset _lock
+    declare -Ag _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
+
+    # Truncate input log file
+    $_loggingIsSet && : > "$INPUT_LOG"
 
     # scoreModifier false
     $_replay && replayGameLoop || gameLoop

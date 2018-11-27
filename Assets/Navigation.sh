@@ -24,8 +24,8 @@ navigateMenu()
         fi
 
         IFS= read -srn 1 key1
-        IFS= read -srn 1 -t 0.001 key2
-        IFS= read -srn 1 -t 0.001 key3
+        IFS= read -srn 1 -t 0.0001 key2
+        IFS= read -srn 1 -t 0.0001 key3
 
         test -z "$key1" && break
 
@@ -297,5 +297,5 @@ clearScreen()
 
 clearBuffer()
 {
-    read -n10000 -t0.001 # Clear input buffer
+    read -n10000 -t0.0001 # Clear input buffer
 }

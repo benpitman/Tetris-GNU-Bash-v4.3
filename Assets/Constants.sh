@@ -15,7 +15,7 @@ declare -rg CEILING=2
 declare -rg FLOOR=23
 declare -rg R_WALL=20
 declare -rg L_WALL=2
-eval declare -arg X_POSITIONS=({$L_WALL..$R_WALL..2})
+declare -arg X_POSITIONS=({2..20..2})
 
 if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
     declare -rg LEGACY=true
@@ -251,22 +251,24 @@ setGameMode()
 
 toggleGhosting()
 {
-    ghostingIsOn && _ghosting=${GHOST_MODES[1]} || _ghosting=${GHOST_MODES[0]}
-}
-
-ghostingIsOn()
-{
-    [[ "$_ghosting" == 'ACTIVE' ]] && true || false
-}
-
-loggingIsOn()
-{
-    [[ "$_logging" == 'ACTIVE' ]] && true || false
+    if $_ghostingIsSet; then
+        _ghostingIsSet=false
+        _ghosting=${GHOST_MODES[1]}
+    else
+        _ghostingIsSet=true
+        _ghosting=${GHOST_MODES[0]}
+    fi
 }
 
 toggleLogging()
 {
-    loggingIsOn && _logging=${LOG_MODES[1]} || _logging=${LOG_MODES[0]}
+    if $_loggingIsSet; then
+        _loggingIsSet=false
+        _logging=${LOG_MODES[1]}
+    else
+        _loggingIsSet=true
+        _logging=${LOG_MODES[0]}
+    fi
 }
 
 declare -Arg STATES=(
