@@ -16,7 +16,12 @@ alert()
         clearBuffer
     fi
 
-    [[ "$1" == 'GAME_OVER' || "$1" == 'END_REPLAY' ]] && sleep 2
+    if [[ "$1" == 'GAME_OVER' || "$1" == 'END_REPLAY' ]]; then
+        sleep 2
+    else
+        printf -v _alertTimeout '%(%s)T' -1
+        (( _alertTimeout += 2 ))
+    fi
 }
 
 pause()
@@ -70,8 +75,6 @@ lineUp()
         3)  alert 'TRIPLE';;
         4)  alert 'TETRIS';;
     esac
-    printf -v _alertTimeout '%(%s)T' -1
-    (( _alertTimeout += 2 ))
 
     navigateTo ${FIELD_OPTIONS[LINES,Y]} ${FIELD_OPTIONS[LINES,X]}
     printf -v paddedText "%${FIELD_OPTIONS[LINES,WIDTH]}s" $_lines
@@ -172,7 +175,7 @@ lockPiece()
         yAx
 
     for coord in ${piece[$_rotation]}; do
-        IFS=, read -r xAx yAx <<< "$coord"
+        IFS=, read -r xAx yAx <<< $coord
         toCheck[(( $y + $yAx ))]= # Save as keys to avoid duplicates
         _lock[$(( $y + $yAx )),$(( $x + ($xAx * 2) ))]=${COLOURS_LOOKUP[$1]}
     done
@@ -191,7 +194,7 @@ canRender()
         yAx
 
     for coord in ${piece[$_rotation]}; do
-        IFS=, read -r xAx yAx <<< "$coord"
+        IFS=, read -r xAx yAx <<< $coord
         (( xAx = $x + ($xAx * 2) ))
         (( yAx = $y + $yAx ))
 
