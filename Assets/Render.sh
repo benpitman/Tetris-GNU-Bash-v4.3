@@ -11,14 +11,19 @@ alert()
     if $sticky; then
         while IFS= read -rsn1 key1; do
             IFS= read -rsn1 -t0.0001 key2
-            [[ "$key1" == $'\e' || "$key1" == $unstick ]] || test -z "$key1" -a -z "$key2" && break
+            if [[ "$key1" == $'\e' && "$key2" == '' ]] || \
+                    [[ "$key1" == $unstick ]] || \
+                    test -z "$key1" -a -z "$key2"; then
+                alert 'CLEAR'
+                break
+            fi
         done
         clearBuffer
     fi
 
     if [[ "$1" == 'GAME_OVER' || "$1" == 'END_REPLAY' ]]; then
         sleep 2
-    else
+    elif [[ "$1" != 'CLEAR' || "$1" != 'PAUSED' ]]; then
         printf -v _alertTimeout '%(%s)T' -1
         (( _alertTimeout += 2 ))
     fi
@@ -255,5 +260,6 @@ navigateTo()
 
 renderText()
 {
-    printf "${COLOURS[0]}%b\e[0m\n" "$@"
+    (( $# > 1 )) && printf "${COLOURS[0]}%b\e[0m\n" "${@:1:$#-1}"
+    printf "${COLOURS[0]}%b\e[0m" "${@: -1}"
 }

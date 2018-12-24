@@ -86,7 +86,7 @@ renderMain()
         0)  setState 'FIELD';;      # New game
         1)  setState 'SCORES';;     # Scores
         2)  setState 'SETTINGS';;   # Settings
-        3)  exit 0;;
+        3)  intrap;;
     esac
 }
 
@@ -256,6 +256,20 @@ textEntry()
     stty -echo
 }
 
+saveSettings()
+{
+    if "$LEGACY"; then
+        printf "%s='%s'\n" _colourMode $_colourMode
+        printf "%s='%s'\n" _gameMode $_gameMode
+        printf "%s='%s'\n" _ghosting $_ghosting
+        printf "%s='%s'\n" _logging $_logging
+        printf "%s='%s'\n" _ghostingIsSet $_ghostingIsSet
+        printf "%s='%s'\n" _loggingIsSet $_loggingIsSet
+    else
+        printf '%s\n' ${_colourMode@A} ${_gameMode@A} ${_ghosting@A} ${_logging@A} ${_ghostingIsSet@A} ${_loggingIsSet@A}
+    fi
+}
+
 renderSettings()
 {
     renderText "${SETTINGS_SCREEN[@]}"
@@ -273,10 +287,11 @@ renderSettings()
                 setGameMode $?;;
         2)      toggleGhosting;;
         3)      toggleLogging;;
-        4)      setState 'MAIN'
-                _selected['settings']=0
-                return;; # Return to main menu
+        4)      setState 'MAIN' # Return to main menu
+                _selected['settings']=0;;
     esac
+
+    saveSettings > "$SETTINGS"
 }
 
 renderScreen()

@@ -2,8 +2,9 @@
 
 declare -rg PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
 declare -rg LOG_DIR='/var/games/tetris'
+declare -rg REPLAY_DIR='/var/games/tetris/replays'
 declare -rg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
-declare -rg SETTINGS_LOG="$LOG_DIR/settings.txt"
+declare -rg SETTINGS="$LOG_DIR/settings.txt"
 declare -rg ERROR_LOG="$LOG_DIR/error.log"
 declare -rg DEBUG_LOG="$LOG_DIR/debug.log"
 declare -rg INPUT_LOG="$LOG_DIR/input.log"
@@ -21,6 +22,10 @@ if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
     declare -rg LEGACY=true
 else
     declare -rg LEGACY=false
+fi
+
+if test -s "$SETTINGS" && ! $_replay; then
+    source "$SETTINGS"
 fi
 
 ################################## Screens #####################################
@@ -49,7 +54,7 @@ if ! $_inTTY; then
         '│                                        │'
         '│                                        │'
         '│                                        │'
-        '│                           © Ben Pitman │'
+        '│                                        │'
         '└────────────────────────────────────────┘'
     )
     declare -arg FIELD_SCREEN=(

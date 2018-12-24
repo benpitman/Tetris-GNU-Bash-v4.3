@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [[ "$UID" != "0" ]]; then
+    printf "Your password is required to install this game.
+            \rLeave blank to cancel install.
+            \rRun as root if you don't have a password.\n"
+    while true; do
+        IFS= read -sp '> ' PASS
+        [ -z "$PASS" ] && exit 0
+        if $( echo "$PASS" | sudo -Svp '' ); then
+            break
+        fi
+    done
+    doSudo=sudo
+else
+    doSudo=
+fi
+
+logDir='/var/games/tetris'
+replayDir='/var/games/tetris/replays'
+
+$doSudo mkdir -p "$replayDir" 2>/dev/null
+$doSudo chmod -R o+wr "$logDir"
+
+printf "\nTetris installed.\n\n"

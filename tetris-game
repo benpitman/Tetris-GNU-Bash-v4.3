@@ -15,18 +15,19 @@ if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
     echo 'Incorrect Bash version. Requires 4.3 or later'
     exit 1
 fi
-if test -n "$1" && ! [[ "$1" =~ [Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee] ]]; then
-    echo 'First parameter must be a boolean'
+if test -n "$1" && ! [[ "$1" =~ true|false ]]; then
+    echo 'First parameter must be true or false'
     exit 1
 fi
 
-extrap()
+intrap()
 {
-    stty sane
     tput cvvis
-    printf '\e[25;1H\e[0m'
+    printf '\e[0m\e[24;1H\n'
+    exit 0
 }
-trap extrap EXIT
+trap intrap INT
+trap 'stty sane' EXIT
 
 declare -g _alertTimeout=0
 declare -g _colourMode=
@@ -83,14 +84,9 @@ unset asset
 setColours
 touch "$HIGHSCORE_LOG" # Create score log if doesn't exist
 
-#TODO Populate settings based of a file if it exists
-if test -s "$SETTINGS_LOG" && ! $_replay; then
-    :
-fi
-
 if $_debug; then
     # Debug mode sends STDERR to an error file
-    exec 2>~/debug.log
+    exec 2>"$DEBUG_LOG"
     set -xT
 else
     exec 2>"$ERROR_LOG"
