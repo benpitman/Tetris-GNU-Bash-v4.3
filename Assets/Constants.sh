@@ -1,38 +1,41 @@
 ################################## GENERAL #####################################
 
-declare -rg -- PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
 declare -rg -- LOG_DIR="/var/games/tetris"
 declare -rg -- REPLAY_DIR="/var/games/tetris/replays"
+
+declare -rg -- PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+
 declare -rg -- HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
 declare -rg -- SETTINGS="$LOG_DIR/settings.txt"
 declare -rg -- ERROR_LOG="$LOG_DIR/error.log"
 declare -rg -- DEBUG_LOG="$LOG_DIR/debug.log"
 declare -rg -- INPUT_LOG="$LOG_DIR/input.log"
+
 declare -rg -- UP="A"
 declare -rg -- DOWN="B"
 declare -rg -- RIGHT="C"
 declare -rg -- LEFT="D"
 
-declare -irg -- CEILING=2
-declare -irg -- FLOOR=23
-declare -irg -- RIGHT_WALL=20
-declare -irg -- LEFT_WALL=2
+declare -rg -- CEILING=2
+declare -rg -- FLOOR=23
+declare -rg -- RIGHT_WALL=20
+declare -rg -- LEFT_WALL=2
 
 declare -arg -- X_POSITIONS=({2..20..2})
 
 if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
-    declare -rg -- LEGACY=true
+    declare -rg -- LEGACY=1
 else
-    declare -rg -- LEGACY=false
+    declare -rg -- LEGACY=0
 fi
 
-if test -s "$SETTINGS" && ! $_replay; then
+if [[ -s "$SETTINGS" ]] && (( $_replay == 0 )); then
     source "$SETTINGS"
 fi
 
 ################################## Screens #####################################
 
-if ! $_inTTY; then
+if (( $_inTTY == 0 )); then
     declare -arg -- MAIN_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│                                        │'

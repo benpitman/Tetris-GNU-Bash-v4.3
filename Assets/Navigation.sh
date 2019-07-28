@@ -3,13 +3,12 @@ navigateMenu()
     local -- key1
     local -- key2
     local -- key3
+    local -- menuIndex
     local -- optionText
+    local -- selected=${2:-0}
 
-    local -i -- selected=${2:-0}
-    local -i -- menuIndex
-
-    local -n menu="$1"
-    local -n menuOptions="${menu[OPTIONS]}"
+    local -n -- menu="$1"
+    local -n -- menuOptions="${menu[OPTIONS]}"
 
     while true; do
         for (( menuIndex = 0; $menuIndex < (${menu[MAX]} + 1); menuIndex++ )); do
@@ -36,8 +35,12 @@ navigateMenu()
         fi
 
         case $key3 in
-            $UP)    (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ));;
-            $DOWN)  (( $selected == ${menu[MAX]} ? selected = 0 : selected++ ));;
+            ($UP) {
+                (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ))
+            };;
+            ($DOWN) {
+                (( $selected == ${menu[MAX]} ? selected = 0 : selected++ ))
+            };;
         esac
     done
 
@@ -46,7 +49,7 @@ navigateMenu()
 
 clearSubMenu()
 {
-    local -i -- subIndex
+    local -- subIndex
 
     local -n -- subClear="$1"
 
@@ -58,11 +61,10 @@ clearSubMenu()
 
 renderPartial()
 {
+    local -- clear
+    local -- half
     local -- optionText
-
-    local -i -- clear
-    local -i -- half
-    local -i -- partial
+    local -- partial
 
     local -n -- partialOptions="$1"
 
@@ -86,10 +88,18 @@ renderMain()
     navigateMenu 'MAIN_MENU' ${_selected[main]}
     _selected['main']=$?
     case ${_selected[main]} in
-        0)  setState 'FIELD';;      # New game
-        1)  setState 'SCORES';;     # Scores
-        2)  setState 'SETTINGS';;   # Settings
-        3)  intrap;;
+        (0) {
+            setState 'FIELD' # New game
+        };;
+        (1) {
+            setState 'SCORES' # Scores
+        };;
+        (2) {
+            setState 'SETTINGS' # Settings
+        };;
+        (3) {
+            intrap
+        };;
     esac
 }
 
@@ -100,20 +110,19 @@ renderField()
 
 renderScores()
 {
-    local -- newScore=false
+    local -- editableIndex
+    local -- editableRow
+    local -- line
+    local -- newScore=0
     local -- playername
-    local -- scoreShown=false
-
-    local -i -- editableIndex
-    local -i -- editableRow
-    local -i -- line
-    local -i -- score
+    local -- score
+    local -- scoreShown=0
 
     local -a -- scores
     local -a -- userNames=()
     local -a -- userScores=()
 
-    (( $_score > 0 )) && newScore=true
+    (( $_score > 0 )) && newScore=1
 
     renderText "${SCORES_SCREEN[@]}"
 
@@ -127,13 +136,13 @@ renderScores()
         userScores[$line]=${scores[$line]/*\,/}
         userNames[$line]=${scores[$line]/\,*/}
 
-        if ! $scoreShown && $newScore && (( ${userScores[$line]} <= $_score )); then
-            scoreShown=true
+        if (( $scoreShown == 0 && $newScore && ${userScores[$line]} <= $_score )); then
+            scoreShown=1
             editableIndex=$line
         fi
     done
 
-    if $newScore; then
+    if (( $newScore )); then
         [[ "$editableIndex" == "" ]] && editableIndex=${#scores[@]}
         # Insert current score into the arrays
         userNames=(
@@ -150,17 +159,17 @@ renderScores()
 
     for (( score = 0; $score < (${SCORES[MAX]} - 1); score++ )); do
         scoreRow=$(( ${SCORES[Y]} + $score ))
-        if $newScore && (( $score == $editableIndex )); then
+        if (( $newScore && $score == $editableIndex )); then
             editableRow=$scoreRow
         else
             printScore $scoreRow ${SCORES[X]} $(( $score + 1 )) "${userNames[$score]}" ${userScores[$score]}
         fi
     done
 
-    if $newScore; then
+    if (( $newScore )); then
         [[ "$editableRow" == "" ]] && (( editableRow = ${SCORES[Y]} + ${SCORES[MAX]} ))
 
-        printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score true
+        printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score 1
         textEntry $editableRow $(( ${SCORES[X]} + 4 )) 8 "playername"
 
         # Add the new score to the highscores file
@@ -179,17 +188,16 @@ renderScores()
 
 printScore()
 {
-    local -- bold=${6:-false}
+    local -- bold=${6:-0}
+    local -- index=$3
     local -- readableScore
     local -- name="$4"
+    local -- pad
     local -- paddedScore
+    local -- score=$5
     local -- spacer
-
-    local -i -- index=$3
-    local -i -- pad
-    local -i -- score=$5
-    local -i -- y=$1
-    local -i -- x=$2
+    local -- y=$1
+    local -- x=$2
 
     # Make the score human readable
     printf -v readableScore "%'d" $score
@@ -197,7 +205,7 @@ printScore()
     (( pad = ${SCORES[WIDTH]} - (4 + ${#name} + ${#readableScore}) ))
     eval printf -v spacer "%.0s." {1..$pad}
     printf -v paddedScore "%-4s%s%s%s" "$index" "$name" "$spacer" "$readableScore"
-    $bold && paddedScore="\e[1m$paddedScore"
+    (( $bold )) && paddedScore="\e[1m$paddedScore"
 
     navigateTo $y $x
     renderText "$paddedScore"
@@ -207,13 +215,12 @@ textEntry()
 {
     local -- inputString
     local -- key
+    local -- maxLength=$3
     local -- nameRef=$4
+    local -- y=$1
+    local -- x=$2
 
-    local -i -- maxLength=$3
-    local -i -- y=$1
-    local -i -- x=$2
-
-    navigateTo $y $x false
+    navigateTo $y $x
 
     # Turn echo back on for text input
     stty echo
@@ -223,14 +230,14 @@ textEntry()
 
     # Clear IFS to avoid whitespace treated as null
     while IFS= read -sn1 key; do
-        if [ -z "$key" ]; then
+        if [[ -z "$key" ]]; then
             if (( ${#inputString} )); then
                 break
             else
-                navigateTo $y $x false
+                navigateTo $y $x
             fi
-        # If backspace character is pressed, remove last entry
-    elif [[ "$key" == $'\177' ]]; then
+        elif [[ "$key" == $'\177' ]]; then
+            # If backspace character is pressed, remove last entry
             if (( ${#inputString} )); then
                 printf "\b.\b"
                 inputString=${inputString:0: -1}
@@ -258,7 +265,7 @@ textEntry()
 
 saveSettings()
 {
-    if $LEGACY; then
+    if (( $LEGACY )); then
         printf "%s='%s'\n" _colourMode $_colourMode
         printf "%s='%s'\n" _gameMode $_gameMode
         printf "%s='%s'\n" _ghosting $_ghosting

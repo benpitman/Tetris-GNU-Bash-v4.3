@@ -2,13 +2,13 @@ alert ()
 {
     local -- alertType=$1
     local -- key1
-    local -- sticky=${2:-false}
+    local -- sticky=${2:-0}
     local -- unstick=${3:-''}
 
     navigateTo ${FIELD_OPTIONS[ALERT,Y]} ${FIELD_OPTIONS[ALERT,X]}
     renderText "\e[1m${FIELD_OPTIONS[ALERT,$alertType]}\e[0m"
 
-    if $sticky; then
+    if (( $sticky )); then
         while IFS= read -rsn1 key1; do
             IFS= read -rsn1 -t0.0001 key2
             if [[ "$key1" == $'\e' && "$key2" == "" ]] || \
@@ -31,7 +31,7 @@ alert ()
 
 pause ()
 {
-    alert "PAUSED" true "[Pp]"
+    alert "PAUSED" 1 "[Pp]"
 }
 
 levelUp ()
@@ -47,9 +47,8 @@ levelUp ()
 scoreUp ()
 {
     local -- modifier
+    local -- numLines=$1
     local -- paddedText
-
-    local -i -- numLines=$1
 
     case $1 in
         1)  modifier=40;;
@@ -66,10 +65,9 @@ scoreUp ()
 
 lineUp ()
 {
+    local -- lineIndex=0
+    local -- numLines=$1
     local -- paddedText
-
-    local -i -- lineIndex=0
-    local -i -- numLines=$1
 
     scoreUp $numLines
     while (( lineIndex++ < $numLines )); do
@@ -98,17 +96,16 @@ lineUp ()
 
 destroyLines ()
 {
+    local -- colour
+    local -- offset=1
     local -- tileType
+    local -- xPlus
+    local -- xPos
+    local -- yPlus
+    local -- yPos
+    local -- zeroes=0
 
     local -a -- lineIndexes=($*)
-
-    local -i -- colour
-    local -i -- offset=1
-    local -i -- xPlus
-    local -i -- xPos
-    local -i -- yPlus
-    local -i -- yPos
-    local -i -- zeroes=0
 
     # If we're in a colour mode, show a white strip before clearing the line
     if ! [[ "$_colourMode" =~ (${COLOUR_MODES[2]}|${COLOUR_MODES[3]}) ]]; then
@@ -163,25 +160,24 @@ destroyLines ()
 checkLines ()
 {
     local -- lineIsFull
+    local -- xPos
+    local -- yPos
 
     local -a -- toCheck=($*)
     local -a -- toDestroy=()
 
-    local -i -- xPos
-    local -i -- yPos
-
     for yPos in ${toCheck[@]}; do
-        lineIsFull=true
+        lineIsFull=1
 
         for xPos in ${X_POSITIONS[@]}; do
             # If any block on a line does not have colour, skip this line
             if ! (( ${_lock[$yPos,$xPos]} )); then
-                lineIsFull=false
+                lineIsFull=0
                 break
             fi
         done
 
-        $lineIsFull && toDestroy[$yPos]=
+        (( $lineIsFull )) && toDestroy[$yPos]=
     done
 
     if (( ${#toDestroy[@]} )); then
@@ -194,15 +190,13 @@ lockPiece ()
 {
     local -- coord
     local -- pieceKey=$1
+    local -- xPos=$3
+    local -- xAx
+    local -- yPos=$2
+    local -- yAx
 
     local -a -- toCheck=()
-
-    local -i -- xPos=$3
-    local -i -- xAx
-    local -i -- yPos=$2
-    local -i -- yAx
-
-    local -n piece="$pieceKey"
+    local -n -- piece="$pieceKey"
 
     for coord in ${piece[$_rotation]}; do
         IFS=, read -r xAx yAx <<< $coord
@@ -216,13 +210,12 @@ lockPiece ()
 canRender ()
 {
     local -- coord
+    local -- xPos=$3
+    local -- xAx
+    local -- yPos=$2
+    local -- yAx
 
-    local -i -- xPos=$3
-    local -i -- xAx
-    local -i -- yPos=$2
-    local -i -- yAx
-
-    local -n piece="$1"
+    local -n -- piece="$1"
 
     for coord in ${piece[$_rotation]}; do
         (( xAx = $xPos + (${coord%,*} * 2) ))
@@ -247,11 +240,10 @@ renderPiece ()
     local -- pieceKey=$1
     local -- tile
     local -- tileType=${4:-BLOCK}
+    local -- xPos=$3
+    local -- yPos=$2
 
-    local -i -- xPos=$3
-    local -i -- yPos=$2
-
-    local -n piece="$pieceKey"
+    local -n -- piece="$pieceKey"
 
     tile="${COLOURS[${COLOURS_LOOKUP[$pieceKey]}]}${!tileType}${COLOURS[${COLOURS_LOOKUP[R]}]}"
 

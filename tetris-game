@@ -15,8 +15,8 @@ if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
     echo "Incorrect Bash version. Requires 4.3 or later"
     exit 1
 fi
-if test -n "$1" && ! [[ "$1" =~ true|false ]]; then
-    echo "First parameter must be true or false"
+if [[ -n "$1" && ! "$1" =~ 0|1 ]]; then
+    echo "First parameter must be 1 or 0"
     exit 1
 fi
 
@@ -29,29 +29,29 @@ intrap ()
 trap intrap INT
 trap "stty sane" EXIT
 
+declare -g -- _alertTimeout=0
 declare -g -- _colourMode=
 declare -g -- _currentPiece=
-declare -g -- _debug=${1:-false}
+declare -g -- _debug=${1:-0}
 declare -g -- _direction=
 declare -g -- _gameMode="NORMAL"
 declare -g -- _ghosting="INACTIVE"
-declare -g -- _ghostingIsSet=false
+declare -g -- _ghostingIsSet=0
+declare -g -- _ghostY=
 declare -g -- _inTTY=
+declare -g -- _level=
+declare -g -- _lines=
 declare -g -- _logging="INACTIVE"
-declare -g -- _loggingIsSet=false
+declare -g -- _loggingIsSet=0
+declare -g -- _newPiece=1
 declare -g -- _nextPiece=
-declare -g -- _replay=false
-
-declare -ig -- _alertTimeout=0
-declare -ig -- _ghostY=
-declare -ig -- _level=
-declare -ig -- _lines=
-declare -ig -- _pieceX=
-declare -ig -- _pieceY=
-declare -ig -- _replayIndex=0
-declare -ig -- _rotation=
-declare -ig -- _score=0
-declare -ig -- _state=0
+declare -g -- _pieceX=
+declare -g -- _pieceY=
+declare -g -- _replay=0
+declare -g -- _replayIndex=0
+declare -g -- _rotation=
+declare -g -- _score=0
+declare -g -- _state=0
 
 declare -ag -- _replayInputs=()
 
@@ -60,8 +60,8 @@ declare -Ag _selected=(
     ["settings"]=0
 )
 
-if test -n "$2" -a -s "$2"; then
-    _replay=true
+if [[ -n "$2" && -s "$2" ]]; then
+    _replay=1
     _replayInputs=( $( fold -b1 "$2" ) )
     _state=1
 fi
@@ -71,10 +71,10 @@ tput civis  # Disable cursor blinker
 
 # If game is loaded on a terminal outside of a GUI environment
 if [[ "$DISPLAY" == "" ]] || [[ "$TERM" == "linux" ]]; then
-    _inTTY=true
+    _inTTY=1
     _colourMode="SIMPLE"
 else
-    _inTTY=false
+    _inTTY=0
     _colourMode="NORMAL"
 fi
 
@@ -87,7 +87,7 @@ unset asset
 setColours
 touch "$HIGHSCORE_LOG" # Create score log if doesn"t exist
 
-if $_debug; then
+if (( $_debug )); then
     # Debug mode sends STDERR to an error file
     exec 2>"$DEBUG_LOG"
     set -xT
@@ -95,111 +95,14 @@ else
     exec 2>"$ERROR_LOG"
 fi
 
-movePiece ()
-{
-    local -i -- nextX=$_pieceX
-    local -i -- nextY=$_pieceY
-
-    case $_direction in
-        ($DOWN) {
-            timeTaken=0 # Reset timer
-            (( nextY++ ))
-        };;
-        ($RIGHT) {
-            (( nextX += 2 ))
-        };;
-        ($LEFT) {
-            (( nextX -= 2 ))
-        };;
-    esac
-
-    canRender "$_currentPiece" $nextY $nextX
-
-    if (( $? == 0 )); then
-        removePiece "$_currentPiece" $_pieceY $_pieceX
-        [[ "$_direction" != "$DOWN" ]] && $_ghostingIsSet && removePiece "$_currentPiece" $_ghostY $_pieceX
-
-        _pieceX=$nextX
-        _pieceY=$nextY
-
-        [[ "$_direction" != "$DOWN" ]] && $_ghostingIsSet && ghostPiece
-        renderPiece "$_currentPiece" $_pieceY $_pieceX
-    elif [[ "$_direction" == "$DOWN" ]]; then
-        lockPiece "$_currentPiece" $_pieceY $_pieceX
-        newPiece=true
-    fi
-
-    $_loggingIsSet && logInput "TRANSLATE"
-}
-
-rotatePiece ()
-{
-    if [[ "$_gameMode" == "ROTATE" ]]; then
-        (( $_rotation == 3 )) && return
-    fi
-
-    local -- captureRotation=$_rotation
-    local -i -- xPos=$_pieceX
-    local -i -- yPos=$_pieceY
-
-    removePiece "$_currentPiece" $_pieceY $_pieceX
-    $_ghostingIsSet && removePiece "$_currentPiece" $_ghostY $_pieceX
-
-    (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
-
-    while true; do
-        canRender "$_currentPiece" $yPos $xPos
-
-        case $? in
-            (0) {
-                break
-            };;
-            (1) {
-                (( xPos -= 2 ))
-            };; # Right wall
-            (3) {
-                (( xPos += 2 ))
-            };; # Left wall
-            (2|4) {
-                _rotation=$captureRotation
-                renderPiece "$_currentPiece" $_pieceY $_pieceX
-                return
-            };; # Floor or another tetromino
-        esac
-    done
-
-    _pieceX=$xPos
-    _pieceY=$yPos
-
-    $_ghostingIsSet && ghostPiece
-    renderPiece "$_currentPiece" $_pieceY $_pieceX
-    $_loggingIsSet && logInput "ROTATE"
-}
-
-dropPiece ()
-{
-    local nextY=$_pieceY
-
-    removePiece "$_currentPiece" $_pieceY $_pieceX
-
-    while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
-        _pieceY=$nextY
-    done
-
-    renderPiece "$_currentPiece" $_pieceY $_pieceX
-    lockPiece "$_currentPiece" $_pieceY $_pieceX
-    newPiece=true
-    $_loggingIsSet && logInput "TRANSLATE"
-}
-
 ghostPiece ()
 {
-    local    -- firstLoop=true
-    local -i -- nextY=$_pieceY
+    local -- firstLoop=1
+    local -- nextY=$_pieceY
 
     _ghostY=$nextY
     while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
-        firstLoop=false
+        firstLoop=0
         _ghostY=$nextY
     done
     $firstLoop && return
@@ -209,7 +112,7 @@ ghostPiece ()
 
 setDefaults ()
 {
-    if $_replay; then
+    if  (( $_replay )); then
         _currentPiece=${_replayInputs[$(( _replayIndex++ ))]}
     else
         if [[ "$_nextPiece" != "" ]]; then
@@ -223,71 +126,58 @@ setDefaults ()
 
     # Starting geometry for new pieces
     _rotation=0
-    IFS="," read _pieceY _pieceX <<< $START_POSITION
-    newPiece=false
-    $_loggingIsSet && logInput "PIECE"
-}
+    _newPiece=0
+    _pieceX=${START_POSITION#*,}
+    _pieceY=${START_POSITION%,*}
 
-logInput ()
-{
-    case "$1" in
-        ("PIECE") {
-            printf "%s" $_currentPiece
-        };;
-        ("TRANSLATE") {
-            printf "%s" $_direction
-        };;
-        ("ROTATE") {
-            printf "%s" "R"
-        };;
-    esac >> "$INPUT_LOG"
+    movePiece 3
 }
 
 replayGameLoop ()
 {
-    local -- updatePosition=false
-    local -- newPiece=true
+    local -- updatePosition=0
+    local -- _newPiece=1
 
-    local -i -- unixTime
+    local -- unixTime
 
     while true; do
         if [[ "${_replayInputs[$_replayIndex]}" == "" ]]; then
             alert "END_REPLAY"
             intrap
         fi
-        if $newPiece; then
+        if (( $_newPiece )); then
             setDefaults
             canRender "$_currentPiece" $_pieceY $_pieceX
             (( $? )) && continue
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
-            $_ghostingIsSet && ghostPiece
+            (( $_ghostingIsSet )) && ghostPiece
             clearBuffer
-        elif $updatePosition; then
-            movePiece
-            updatePosition=false
-            $newPiece && continue
+        elif (( $updatePosition )); then
+            movePiece 0
+            updatePosition=0
+            (( $_newPiece )) && continue
         fi
 
         case ${_replayInputs[$(( _replayIndex++ ))]} in
             ("R") {
-                rotatePiece
+                movePiece 1
             };;
             ($UP) {
                 _direction=$UP
-                dropPiece
+                movePiece 2
             };;
             ($DOWN) {
                 _direction=$DOWN
-                updatePosition=true
+                updatePosition=1
             };;
             ($RIGHT) {
                 _direction=$RIGHT
-                updatePosition=true
+                updatePosition=1
             };;
             ($LEFT) {
                 _direction=$LEFT
-                updatePosition=true
+                updatePosition=1
             };;
         esac
 
@@ -303,8 +193,7 @@ gameLoop ()
     local -- key1
     local -- key2
     local -- key3
-    local -- updatePosition=false
-    local -- newPiece=true
+    local -- updatePosition=0
     local -- postTime
     local -- preTime
     local -- tick
@@ -315,7 +204,7 @@ gameLoop ()
     local -i -- unixTime
 
     while true; do
-        if $newPiece; then
+        if (( $_newPiece )); then
             setDefaults
             canRender "$_currentPiece" $_pieceY $_pieceX
             if (( $? )); then
@@ -326,13 +215,13 @@ gameLoop ()
             fi
 
             renderPiece "$_currentPiece" $_pieceY $_pieceX
-            $_ghostingIsSet && ghostPiece
+            (( $_ghostingIsSet )) && ghostPiece
             renderNextPiece
             clearBuffer
-        elif $updatePosition; then
-            movePiece
-            updatePosition=false
-            $newPiece && continue
+        elif (( $updatePosition )); then
+            movePiece 0
+            updatePosition=0
+            (( $_newPiece )) && continue
         fi
 
         preTime=$( date "+%2N" )
@@ -356,7 +245,7 @@ gameLoop ()
         if (( $readStatus != 142 )); then
             # If enter or space is pressed
             if [[ "$key1" == "" ]] || [[ "$key1" == " " ]]; then
-                rotatePiece
+                movePiece 1
                 sleep 0.05
             elif [[ "$key1" == [Pp] ]] && [[ "$key2" == "" && "$key3" == "" ]]; then
                 pause
@@ -364,19 +253,19 @@ gameLoop ()
                 case $key3 in
                     ($UP) {
                         _direction=$UP
-                        dropPiece
+                        movePiece 2
                     };;
                     ($DOWN) {
                         _direction=$DOWN
-                        updatePosition=true
+                        updatePosition=1
                     };;
                     ($RIGHT) {
                         _direction=$RIGHT
-                        updatePosition=true
+                        updatePosition=1
                     };;
                     ($LEFT) {
                         _direction=$LEFT
-                        updatePosition=true
+                        updatePosition=1
                     };;
                 esac
             fi
@@ -393,7 +282,7 @@ gameLoop ()
         fi
 
         if (( $timeTaken >= $speed )); then
-            updatePosition=true
+            updatePosition=1
             _direction=$DOWN
             timeTaken=0
 
@@ -416,10 +305,10 @@ newGame ()
     declare -Ag -- _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
     # Truncate input log file
-    $_loggingIsSet && : > "$INPUT_LOG"
+    (( $_loggingIsSet )) && : > "$INPUT_LOG"
 
     # scoreModifier false
-    $_replay && replayGameLoop || gameLoop
+     (( $_replay )) && replayGameLoop || gameLoop
     return $?
 }
 
