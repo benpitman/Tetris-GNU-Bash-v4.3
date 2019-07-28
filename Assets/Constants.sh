@@ -1,27 +1,29 @@
 ################################## GENERAL #####################################
 
-declare -rg PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
-declare -rg LOG_DIR='/var/games/tetris'
-declare -rg REPLAY_DIR='/var/games/tetris/replays'
-declare -rg HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
-declare -rg SETTINGS="$LOG_DIR/settings.txt"
-declare -rg ERROR_LOG="$LOG_DIR/error.log"
-declare -rg DEBUG_LOG="$LOG_DIR/debug.log"
-declare -rg INPUT_LOG="$LOG_DIR/input.log"
-declare -rg UP='A'
-declare -rg DOWN='B'
-declare -rg RIGHT='C'
-declare -rg LEFT='D'
-declare -rg CEILING=2
-declare -rg FLOOR=23
-declare -rg R_WALL=20
-declare -rg L_WALL=2
-declare -arg X_POSITIONS=({2..20..2})
+declare -rg -- PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
+declare -rg -- LOG_DIR="/var/games/tetris"
+declare -rg -- REPLAY_DIR="/var/games/tetris/replays"
+declare -rg -- HIGHSCORE_LOG="$LOG_DIR/highscores.ths"
+declare -rg -- SETTINGS="$LOG_DIR/settings.txt"
+declare -rg -- ERROR_LOG="$LOG_DIR/error.log"
+declare -rg -- DEBUG_LOG="$LOG_DIR/debug.log"
+declare -rg -- INPUT_LOG="$LOG_DIR/input.log"
+declare -rg -- UP="A"
+declare -rg -- DOWN="B"
+declare -rg -- RIGHT="C"
+declare -rg -- LEFT="D"
+
+declare -irg -- CEILING=2
+declare -irg -- FLOOR=23
+declare -irg -- RIGHT_WALL=20
+declare -irg -- LEFT_WALL=2
+
+declare -arg -- X_POSITIONS=({2..20..2})
 
 if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 4 )); then
-    declare -rg LEGACY=true
+    declare -rg -- LEGACY=true
 else
-    declare -rg LEGACY=false
+    declare -rg -- LEGACY=false
 fi
 
 if test -s "$SETTINGS" && ! $_replay; then
@@ -31,7 +33,7 @@ fi
 ################################## Screens #####################################
 
 if ! $_inTTY; then
-    declare -arg MAIN_SCREEN=(
+    declare -arg -- MAIN_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│                                        │'
         '│  █▛██▜█ ██ ▜█ █▛██▜█ ██ █▙  ██  ▟▙ ▜█  │'
@@ -57,7 +59,7 @@ if ! $_inTTY; then
         '│                                        │'
         '└────────────────────────────────────────┘'
     )
-    declare -arg FIELD_SCREEN=(
+    declare -arg -- FIELD_SCREEN=(
         '┌────────────────────┬───────────────────┐'
         '│                    │  ╔═════════════╗  │'
         '│                    ├──╢  S C O R E  ╟──┤'
@@ -83,7 +85,7 @@ if ! $_inTTY; then
         '│                    │  ╚══════════╝     │'
         '└────────────────────┴───────────────────┘'
     )
-    declare -arg SCORES_SCREEN=(
+    declare -arg -- SCORES_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│            ╔═════════════╗             │'
         '├────────────╢ S C O R E S ╟─────────────┤'
@@ -109,7 +111,7 @@ if ! $_inTTY; then
         '│                                        │'
         '└────────────────────────────────────────┘'
     )
-    declare -arg SETTINGS_SCREEN=(
+    declare -arg -- SETTINGS_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│          ╔═════════════════╗           │'
         '├──────────╢ S E T T I N G S ╟───────────┤'
@@ -136,7 +138,7 @@ if ! $_inTTY; then
         '└────────────────────────────────────────┘'
     )
 else
-    declare -arg MAIN_SCREEN=(
+    declare -arg -- MAIN_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│                                        │'
         '│  ██████ █████ ██████ █████  ██  █████  │'
@@ -162,7 +164,7 @@ else
         '│                           © Ben Pitman │'
         '└────────────────────────────────────────┘'
     )
-    declare -arg FIELD_SCREEN=(
+    declare -arg -- FIELD_SCREEN=(
         '┌────────────────────┬───────────────────┐'
         '│                    │  ┌─────────────┐  │'
         '│                    ├──┤  S C O R E  ├──┤'
@@ -188,7 +190,7 @@ else
         '│                    │  └──────────┘     │'
         '└────────────────────┴───────────────────┘'
     )
-    declare -arg SCORES_SCREEN=(
+    declare -arg -- SCORES_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│            ┌─────────────┐             │'
         '├────────────┤ S C O R E S ├─────────────┤'
@@ -214,7 +216,7 @@ else
         '│                                        │'
         '└────────────────────────────────────────┘'
     )
-    declare -arg SETTINGS_SCREEN=(
+    declare -arg -- SETTINGS_SCREEN=(
         '┌────────────────────────────────────────┐'
         '│          ┌─────────────────┐           │'
         '├──────────┤ S E T T I N G S ├───────────┤'
@@ -291,16 +293,16 @@ setState()
 
 ############################### Menu Navigation ################################
 
-declare -rg START_POSITION='2,8'
+declare -rg -- START_POSITION='2,8'
 
-declare -arg MAIN_OPTIONS=(
+declare -arg -- MAIN_OPTIONS=(
     'N E W   G A M E'
     'S C O R E S'
     'S E T T I N G S'
     'Q U I T'
 )
 
-declare -Arg MAIN_MENU=(
+declare -Arg -- MAIN_MENU=(
     ['MAX']=3
     ['OPTIONS']='MAIN_OPTIONS'
     ['PADDING']=' '
@@ -318,7 +320,7 @@ declare -Arg MAIN_MENU=(
     ['3,X']=16
 )
 
-declare -arg SETTINGS_OPTIONS=(
+declare -arg -- SETTINGS_OPTIONS=(
     'COLOUR  MODE'
     'GAME  MODE'
     'GHOSTING'
@@ -327,7 +329,7 @@ declare -arg SETTINGS_OPTIONS=(
 )
 
 # Settings menu options
-declare -Arg SETTINGS_MENU=(
+declare -Arg -- SETTINGS_MENU=(
     ['MAX']=4
     ['OPTIONS']='SETTINGS_OPTIONS'
     ['PADDING']=' '
@@ -351,7 +353,7 @@ declare -Arg SETTINGS_MENU=(
 )
 
 # Opens up the submenu for selection
-declare -Arg SETTINGS_CLEAR_SUB_MENU=(
+declare -Arg -- SETTINGS_CLEAR_SUB_MENU=(
     ['MAX']=11
 
     ['Y']=9
@@ -371,7 +373,7 @@ declare -Arg SETTINGS_CLEAR_SUB_MENU=(
 )
 
 # Clears the chosen items for repopulation
-declare -Arg SETTINGS_SUB_MENU=(
+declare -Arg -- SETTINGS_SUB_MENU=(
     ['MAX']=3
     ['WIDTH']=11
 
@@ -397,13 +399,13 @@ declare -Arg SETTINGS_SUB_MENU=(
     ['CLEAR,MAX']=11
 )
 
-declare -Arg NOTE=(
+declare -Arg -- NOTE=(
     ['CLEAR']='                                        '
     ['Y']=6
     ['X']=22
 )
 
-declare -arg COLOUR_MODES=(
+declare -arg -- COLOUR_MODES=(
     'NORMAL'
     'SIMPLE'
     'SHADOW'
@@ -411,7 +413,7 @@ declare -arg COLOUR_MODES=(
 )
 
 # Settings colour mode submenu options
-declare -Arg SETTINGS_COLOUR_SUB_MENU=(
+declare -Arg -- SETTINGS_COLOUR_SUB_MENU=(
     ['MAX']=3
     ['OPTIONS']='COLOUR_MODES'
     ['PADDING']='  '
@@ -433,13 +435,13 @@ declare -Arg SETTINGS_COLOUR_SUB_MENU=(
     ['3,NOTE']="Black on white"
 )
 
-declare -arg GAME_MODES=(
+declare -arg -- GAME_MODES=(
     'NORMAL'
     'ROTATE'
     'FORGET'    # May not be implemented
 )
 
-declare -Arg SETTINGS_GAME_SUB_MENU=(
+declare -Arg -- SETTINGS_GAME_SUB_MENU=(
     ['MAX']=1
     ['OPTIONS']='GAME_MODES'
     ['PADDING']='  '
@@ -457,12 +459,12 @@ declare -Arg SETTINGS_GAME_SUB_MENU=(
     ['2,NOTE']="Placed tetrominoes fade out over time"
 )
 
-declare -arg GHOST_MODES=(
+declare -arg -- GHOST_MODES=(
     'ACTIVE'
     'INACTIVE'
 )
 
-declare -arg LOG_MODES=(
+declare -arg -- LOG_MODES=(
     'ACTIVE'
     'INACTIVE'
 )
@@ -471,7 +473,7 @@ declare -arg SCORES_OPTIONS=(
     'BACK'
 )
 
-declare -Arg SCORES_MENU=(
+declare -Arg -- SCORES_MENU=(
     ['MAX']=0
     ['OPTIONS']='SCORES_OPTIONS'
     ['PADDING']=' '
@@ -480,7 +482,7 @@ declare -Arg SCORES_MENU=(
     ['0,X']=18
 )
 
-declare -Arg SCORES=(
+declare -Arg -- SCORES=(
     ['MAX']=13
     ['WIDTH']=30
 
@@ -488,7 +490,7 @@ declare -Arg SCORES=(
     ['X']=7
 )
 
-declare -Arg FIELD_OPTIONS=(
+declare -Arg -- FIELD_OPTIONS=(
     ['SCORE,X']=28
     ['SCORE,Y']=6
     ['SCORE,WIDTH']=9
@@ -513,7 +515,7 @@ declare -Arg FIELD_OPTIONS=(
     ['ALERT,Y']=8
 )
 
-declare -Arg NEXT_PIECE=(
+declare -Arg -- NEXT_PIECE=(
     ['R,X']=26  # Reset
     ['R,Y']=19
 
@@ -541,15 +543,15 @@ declare -Arg NEXT_PIECE=(
 
 ################################ Tetrominoes ###################################
 
-declare -rg BLANK='\u0020\u0020'
-declare -rg GHOST='\u2592\u2592'
-declare -rg BLOCK='\u2588\u2588'
+declare -rg -- BLANK='\u0020\u0020'
+declare -rg -- GHOST='\u2592\u2592'
+declare -rg -- BLOCK='\u2588\u2588'
 
 setColours()
 {
     case $_colourMode in
         'NORMAL')
-            declare -ag COLOURS=(
+            declare -ag -- COLOURS=(
                 [0]=$'\e[0m'        # Default
                 [1]=$'\e[38;5;43m'  # Cyan
                 [2]=$'\e[38;5;27m'  # Blue
@@ -562,7 +564,7 @@ setColours()
             )
         ;;
         'SIMPLE')
-            declare -ag COLOURS=(
+            declare -ag -- COLOURS=(
                 [0]=$'\e[0m'        # Default
                 [1]=$'\e[38;5;27m'  # Blue
                 [2]=$'\e[38;5;128m' # Purple
@@ -575,7 +577,7 @@ setColours()
             )
         ;;
         'SHADOW')
-            declare -ag COLOURS=(
+            declare -ag -- COLOURS=(
                 [0]=$'\e[0;97m'   # white
                 [1]=$'\e[0;97m'
                 [2]=$'\e[0;97m'
@@ -588,7 +590,7 @@ setColours()
             )
         ;;
         'BLEACH')
-            declare -ag COLOURS=(
+            declare -ag -- COLOURS=(
                 [0]=$'\e[38;5;232;47m'   # Inverted white
                 [1]=$'\e[38;5;232;47m'
                 [2]=$'\e[38;5;232;47m'
@@ -603,7 +605,7 @@ setColours()
     esac
 }
 
-declare -Arg COLOURS_LOOKUP=(
+declare -Arg -- COLOURS_LOOKUP=(
     [R]=0   # Reset
     [I]=1
     [J]=2
@@ -615,51 +617,51 @@ declare -Arg COLOURS_LOOKUP=(
     [W]=8   # White
 )
 
-declare -arg PIECES=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
+declare -arg -- PIECES=( 'I' 'J' 'L' 'O' 'S' 'T' 'Z' )
 
-declare -arg I=(
+declare -arg -- I=(
     '0,1 1,1 2,1 3,1'
     '2,0 2,1 2,2 2,3'
     '0,2 1,2 2,2 3,2'
     '1,0 1,1 1,2 1,3'
 )
 
-declare -arg J=(
+declare -arg -- J=(
     '0,0 0,1 1,1 2,1'
     '1,0 2,0 1,1 1,2'
     '0,1 1,1 2,1 2,2'
     '1,0 1,1 0,2 1,2'
 )
 
-declare -arg L=(
+declare -arg -- L=(
     '2,0 0,1 1,1 2,1'
     '1,0 1,1 1,2 2,2'
     '0,1 1,1 2,1 0,2'
     '0,0 1,0 1,1 1,2'
 )
 
-declare -arg O=(
+declare -arg -- O=(
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
     '0,0 1,0 0,1 1,1'
 )
 
-declare -arg S=(
+declare -arg -- S=(
     '1,0 2,0 0,1 1,1'
     '1,0 1,1 2,1 2,2'
     '1,1 2,1 0,2 1,2'
     '0,0 0,1 1,1 1,2'
 )
 
-declare -arg T=(
+declare -arg -- T=(
     '1,0 0,1 1,1 2,1'
     '1,0 0,1 1,1 1,2'
     '0,1 1,1 2,1 1,2'
     '1,0 1,1 2,1 1,2'
 )
 
-declare -arg Z=(
+declare -arg -- Z=(
     '0,0 1,0 1,1 2,1'
     '2,0 1,1 2,1 1,2'
     '0,1 1,1 1,2 2,2'

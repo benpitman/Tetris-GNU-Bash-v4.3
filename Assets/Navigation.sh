@@ -1,24 +1,25 @@
 navigateMenu()
 {
+    local -- key1
+    local -- key2
+    local -- key3
+    local -- optionText
+
+    local -i -- selected=${2:-0}
+    local -i -- menuIndex
+
     local -n menu="$1"
     local -n menuOptions="${menu[OPTIONS]}"
-    local                   \
-        key1                \
-        key2                \
-        key3                \
-        optionText          \
-        selected=${2:-0}    \
-        m
 
     while true; do
-        for (( m = 0; $m < (${menu[MAX]} + 1); m++ )); do
-            (( $m == $selected )) && optionText='\e[7m' || optionText='\e[27m'
-            optionText+="${menu[PADDING]}${menuOptions[$m]}${menu[PADDING]}\e[27m"
-            navigateTo ${menu[$m,Y]} ${menu[$m,X]}
+        for (( menuIndex = 0; $menuIndex < (${menu[MAX]} + 1); menuIndex++ )); do
+            (( $menuIndex == $selected )) && optionText="\e[7m" || optionText="\e[27m"
+            optionText+="${menu[PADDING]}${menuOptions[$menuIndex]}${menu[PADDING]}\e[27m"
+            navigateTo ${menu[$menuIndex,Y]} ${menu[$menuIndex,X]}
             renderText "$optionText"
         done
 
-        if test -n "${menu[$selected,NOTE]}"; then
+        if [[ "${menu[$selected,NOTE]}" != "" ]]; then
             navigateTo ${NOTE[Y]} $(( ${NOTE[X]} - (${#menu[$selected,NOTE]} / 2) ))
             renderText "${menu[$selected,NOTE]}"
         fi
@@ -27,9 +28,9 @@ navigateMenu()
         IFS= read -srn 1 -t 0.0001 key2
         IFS= read -srn 1 -t 0.0001 key3
 
-        test -z "$key1" && break
+        [[ "$key1" == "" ]] && break
 
-        if test -n "${menu[$selected,NOTE]}"; then
+        if [[ "${menu[$selected,NOTE]}" != "" ]]; then
             navigateTo ${NOTE[Y]} $(( ${NOTE[X]} - (${#NOTE[CLEAR]} / 2) ))
             renderText "${NOTE[CLEAR]}"
         fi
@@ -45,33 +46,35 @@ navigateMenu()
 
 clearSubMenu()
 {
-    local -n subClear="$1"
-    local s
+    local -i -- subIndex
 
-    for (( s = 0; $s < ${subClear[MAX]}; s++ )); do
-        navigateTo $(( ${subClear[Y]} + $s )) ${subClear[X]}
-        renderText "${subClear[$s]}"
+    local -n -- subClear="$1"
+
+    for (( subIndex = 0; $subIndex < ${subClear[MAX]}; subIndex++ )); do
+        navigateTo $(( ${subClear[Y]} + $subIndex )) ${subClear[X]}
+        renderText "${subClear[$subIndex]}"
     done
 }
 
 renderPartial()
 {
-    local -n partialOptions="$1"
-    local           \
-        c           \
-        half        \
-        optionText  \
-        p
+    local -- optionText
 
-    for (( c = 0; $c < ${partialOptions[CLEAR,MAX]}; c++ )); do
-        navigateTo $(( ${partialOptions[CLEAR,Y]} + $c )) ${partialOptions[CLEAR,X]}
+    local -i -- clear
+    local -i -- half
+    local -i -- partial
+
+    local -n -- partialOptions="$1"
+
+    for (( clear = 0; $clear < ${partialOptions[CLEAR,MAX]}; clear++ )); do
+        navigateTo $(( ${partialOptions[CLEAR,Y]} + $clear )) ${partialOptions[CLEAR,X]}
         renderText "${partialOptions[CLEAR]}"
     done
 
-    for (( p = 0; $p < (${partialOptions[MAX]} + 1); p++ )); do
-        optionText="${!partialOptions[$p]}"
+    for (( partial = 0; $partial < (${partialOptions[MAX]} + 1); partial++ )); do
+        optionText="${!partialOptions[$partial]}"
         half=$(( (${partialOptions[WIDTH]} - ${#optionText}) / 2 ))
-        navigateTo ${partialOptions[$p,Y]} $(( ${partialOptions[$p,X]} + $half + 1 ))
+        navigateTo ${partialOptions[$partial,Y]} $(( ${partialOptions[$partial,X]} + $half + 1 ))
         renderText "$optionText"
     done
 }
@@ -97,24 +100,25 @@ renderField()
 
 renderScores()
 {
-    local                   \
-        editableIndex       \
-        editableRow         \
-        line                \
-        newScore=false      \
-        playername          \
-        score               \
-        scores              \
-        scoreShown=false    \
-        userNames=()        \
-        userScores=()
+    local -- newScore=false
+    local -- playername
+    local -- scoreShown=false
+
+    local -i -- editableIndex
+    local -i -- editableRow
+    local -i -- line
+    local -i -- score
+
+    local -a -- scores
+    local -a -- userNames=()
+    local -a -- userScores=()
 
     (( $_score > 0 )) && newScore=true
 
     renderText "${SCORES_SCREEN[@]}"
 
     if $LEGACY; then
-        IFS=$'\n' read -d '' -ra scores < "$HIGHSCORE_LOG"
+        IFS=$'\n' read -d "" -ra scores < "$HIGHSCORE_LOG"
     else
         readarray -t scores < "$HIGHSCORE_LOG"
     fi
@@ -130,7 +134,7 @@ renderScores()
     done
 
     if $newScore; then
-        test -z "$editableIndex" && editableIndex=${#scores[@]}
+        [[ "$editableIndex" == "" ]] && editableIndex=${#scores[@]}
         # Insert current score into the arrays
         userNames=(
             ${userNames[@]:0:$editableIndex}
@@ -154,7 +158,7 @@ renderScores()
     done
 
     if $newScore; then
-        test -z "$editableRow" && editableRow=$(( ${SCORES[Y]} + ${SCORES[MAX]} ))
+        [[ "$editableRow" == "" ]] && (( editableRow = ${SCORES[Y]} + ${SCORES[MAX]} ))
 
         printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score true
         textEntry $editableRow $(( ${SCORES[X]} + 4 )) 8 "playername"
@@ -175,28 +179,24 @@ renderScores()
 
 printScore()
 {
-    local                   \
-        bit                 \
-        bold=${6:-false}    \
-        hrScore             \
-        index=$3            \
-        name="$4"           \
-        pad                 \
-        paddedScore         \
-        score=$5            \
-        spacer              \
-        y=$1                \
-        x=$2
+    local -- bold=${6:-false}
+    local -- readableScore
+    local -- name="$4"
+    local -- paddedScore
+    local -- spacer
+
+    local -i -- index=$3
+    local -i -- pad
+    local -i -- score=$5
+    local -i -- y=$1
+    local -i -- x=$2
 
     # Make the score human readable
-    for (( bit = ${#score}; bit > 0; bit-- )); do
-        (( $bit < ${#score} && $bit % 3 == 0 )) && hrScore+=","
-        hrScore+="${score: -$bit:1}"
-    done
+    printf -v readableScore "%'d" $score
 
-    (( pad = ${SCORES[WIDTH]} - (4 + ${#name} + ${#hrScore}) ))
-    eval printf -v spacer '%.0s.' {1..$pad}
-    printf -v paddedScore '%-4s%s%s%s' "$index" "$name" "$spacer" "$hrScore"
+    (( pad = ${SCORES[WIDTH]} - (4 + ${#name} + ${#readableScore}) ))
+    eval printf -v spacer "%.0s." {1..$pad}
+    printf -v paddedScore "%-4s%s%s%s" "$index" "$name" "$spacer" "$readableScore"
     $bold && paddedScore="\e[1m$paddedScore"
 
     navigateTo $y $x
@@ -205,13 +205,13 @@ printScore()
 
 textEntry()
 {
-    local               \
-        inputString     \
-        key             \
-        maxLength=$3    \
-        nameRef=$4      \
-        y=$1            \
-        x=$2
+    local -- inputString
+    local -- key
+    local -- nameRef=$4
+
+    local -i -- maxLength=$3
+    local -i -- y=$1
+    local -i -- x=$2
 
     navigateTo $y $x false
 
@@ -230,16 +230,16 @@ textEntry()
                 navigateTo $y $x false
             fi
         # If backspace character is pressed, remove last entry
-        elif [[ "$key" == $'\177' ]]; then
+    elif [[ "$key" == $'\177' ]]; then
             if (( ${#inputString} )); then
-                printf '\b.\b'
+                printf "\b.\b"
                 inputString=${inputString:0: -1}
             fi
         elif (( ${#inputString} > $maxLength )); then
             continue
         elif [[ "$key" == [\ _] ]]; then
             # Replace spaces with underscores
-            printf '_'
+            printf "_"
             inputString+="_"
         elif [[ "$key" == [[:punct:]] ]]; then
             # Disallow punctuation
@@ -250,7 +250,7 @@ textEntry()
         fi
     done
 
-    printf -v "$nameRef" '%s' "$inputString"
+    printf -v "$nameRef" "%s" "$inputString"
     printf "${COLOURS[${COLOURS_LOOKUP[R]}]}"
     tput civis
     stty -echo
@@ -258,7 +258,7 @@ textEntry()
 
 saveSettings()
 {
-    if "$LEGACY"; then
+    if $LEGACY; then
         printf "%s='%s'\n" _colourMode $_colourMode
         printf "%s='%s'\n" _gameMode $_gameMode
         printf "%s='%s'\n" _ghosting $_ghosting
@@ -266,7 +266,7 @@ saveSettings()
         printf "%s='%s'\n" _ghostingIsSet $_ghostingIsSet
         printf "%s='%s'\n" _loggingIsSet $_loggingIsSet
     else
-        printf '%s\n' ${_colourMode@A} ${_gameMode@A} ${_ghosting@A} ${_logging@A} ${_ghostingIsSet@A} ${_loggingIsSet@A}
+        printf "%s\n" ${_colourMode@A} ${_gameMode@A} ${_ghosting@A} ${_logging@A} ${_ghostingIsSet@A} ${_loggingIsSet@A}
     fi
 }
 
@@ -274,21 +274,33 @@ renderSettings()
 {
     renderText "${SETTINGS_SCREEN[@]}"
 
-    renderPartial 'SETTINGS_SUB_MENU'
-    navigateMenu 'SETTINGS_MENU' ${_selected[settings]}
-    _selected['settings']=$?
+    renderPartial "SETTINGS_SUB_MENU"
+    navigateMenu "SETTINGS_MENU" ${_selected[settings]}
+    _selected["settings"]=$?
 
     case ${_selected[settings]} in
-        0|1)    clearSubMenu 'SETTINGS_CLEAR_SUB_MENU';;&
-        0)      navigateMenu 'SETTINGS_COLOUR_SUB_MENU'
-                setColourMode $?
-                setColours;;
-        1)      navigateMenu 'SETTINGS_GAME_SUB_MENU'
-                setGameMode $?;;
-        2)      toggleGhosting;;
-        3)      toggleLogging;;
-        4)      setState 'MAIN' # Return to main menu
-                _selected['settings']=0;;
+        (0|1) {
+            clearSubMenu "SETTINGS_CLEAR_SUB_MENU"
+        };;&
+        (0) {
+            navigateMenu "SETTINGS_COLOUR_SUB_MENU"
+            setColourMode $?
+            setColours
+        };;
+        (1) {
+            navigateMenu "SETTINGS_GAME_SUB_MENU"
+            setGameMode $?
+        };;
+        (2) {
+            toggleGhosting
+        };;
+        (3) {
+            toggleLogging
+        };;
+        (4) {
+            setState "MAIN" # Return to main menu
+            _selected["settings"]=0
+        };;
     esac
 
     saveSettings > "$SETTINGS"
@@ -297,17 +309,27 @@ renderSettings()
 renderScreen()
 {
     case $_state in
-        *)  clearScreen;;&
-        0)  renderMain;;
-        1)  renderField;;
-        2)  renderScores;;
-        3)  renderSettings;;
+        (*) {
+            clearScreen
+        };;&
+        (0) {
+            renderMain
+        };;
+        (1) {
+            renderField
+        };;
+        (2) {
+            renderScores
+        };;
+        (3) {
+            renderSettings
+        };;
     esac
 }
 
 clearScreen()
 {
-    printf '\e[2J\e[1;1H'
+    printf "\e[2J\e[1;1H"
 }
 
 clearBuffer()
