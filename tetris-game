@@ -34,14 +34,13 @@ declare -g -- _colourMode=
 declare -g -- _currentPiece=
 declare -g -- _debug=${1:-0}
 declare -g -- _direction=
-declare -g -- _gameMode="NORMAL"
-declare -g -- _ghosting="INACTIVE"
+declare -g -- _gameMode=0
 declare -g -- _ghostingIsSet=0
 declare -g -- _ghostY=
+declare -g -- _holdingIsSet=0
 declare -g -- _inTTY=
 declare -g -- _level=
 declare -g -- _lines=
-declare -g -- _logging="INACTIVE"
 declare -g -- _loggingIsSet=0
 declare -g -- _newPiece=1
 declare -g -- _nextPiece=
@@ -58,6 +57,7 @@ declare -ag -- _replayInputs=()
 declare -Ag _selected=(
     ["main"]=0
     ["settings"]=0
+    ["constants"]=0
 )
 
 if [[ -n "$2" && -s "$2" ]]; then
@@ -72,13 +72,13 @@ tput civis  # Disable cursor blinker
 # If game is loaded on a terminal outside of a GUI environment
 if [[ "$DISPLAY" == "" ]] || [[ "$TERM" == "linux" ]]; then
     _inTTY=1
-    _colourMode="SIMPLE"
+    _colourMode=1 # SIMPLE
 else
     _inTTY=0
-    _colourMode="NORMAL"
+    _colourMode=0 # NORMAL
 fi
 
-# Import the assets
+# Import the asset files
 for asset in Assets/*; do
     source "$asset"
 done

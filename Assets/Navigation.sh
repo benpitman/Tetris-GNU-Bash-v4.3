@@ -6,6 +6,7 @@ navigateMenu()
     local -- menuIndex
     local -- optionText
     local -- selected=${2:-0}
+    local -- text
 
     local -n -- menu="$1"
     local -n -- menuOptions="${menu[OPTIONS]}"
@@ -13,7 +14,14 @@ navigateMenu()
     while true; do
         for (( menuIndex = 0; $menuIndex < (${menu[MAX]} + 1); menuIndex++ )); do
             (( $menuIndex == $selected )) && optionText="\e[7m" || optionText="\e[27m"
-            optionText+="${menu[PADDING]}${menuOptions[$menuIndex]}${menu[PADDING]}\e[27m"
+
+            if [[ -n "${menuOptions[$menuIndex]}" ]]; then
+                text=${menuOptions[$menuIndex]}
+            elif [[ -n "${menuOptions[$menuIndex,FUNCTION]}" ]]; then
+                ${menuOptions[$menuIndex,FUNCTION]} "text"
+            fi
+
+            optionText+="${menu[PADDING]}$text${menu[PADDING]}\e[27m"
             navigateTo ${menu[$menuIndex,Y]} ${menu[$menuIndex,X]}
             renderText "$optionText"
         done
@@ -96,6 +104,9 @@ renderMain()
         };;
         (2) {
             setState 'SETTINGS' # Settings
+        };;
+        (2) {
+            setState 'CONSTANTS' # Constants
         };;
         (3) {
             intrap
@@ -268,13 +279,12 @@ saveSettings()
     if (( $LEGACY )); then
         printf "%s='%s'\n" _colourMode $_colourMode
         printf "%s='%s'\n" _gameMode $_gameMode
-        printf "%s='%s'\n" _ghosting $_ghosting
-        printf "%s='%s'\n" _logging $_logging
         printf "%s='%s'\n" _ghostingIsSet $_ghostingIsSet
+        printf "%s='%s'\n" _holdingIsSet $_holdingIsSet
         printf "%s='%s'\n" _loggingIsSet $_loggingIsSet
     else
-        printf "%s\n" ${_colourMode@A} ${_gameMode@A} ${_ghosting@A} ${_logging@A} ${_ghostingIsSet@A} ${_loggingIsSet@A}
-    fi
+        printf "%s\n" ${_colourMode@A} ${_gameMode@A} ${_ghostingIsSet@A} ${_holdingIsSet@A} ${_loggingIsSet@A}
+    fi > "$SETTINGS"
 }
 
 renderSettings()
@@ -299,10 +309,8 @@ renderSettings()
             setGameMode $?
         };;
         (2) {
-            toggleGhosting
-        };;
-        (3) {
-            toggleLogging
+            setState "CONSTANTS"
+            _selected["constants"]=0
         };;
         (4) {
             setState "MAIN" # Return to main menu
@@ -310,7 +318,24 @@ renderSettings()
         };;
     esac
 
-    saveSettings > "$SETTINGS"
+    saveSettings
+}
+
+renderConstants()
+{
+    renderText "${CONSTANTS_SCREEN[@]}"
+
+    navigateMenu "CONSTANTS_MENU" ${_selected[constants]}
+    _selected["constants"]=$?
+
+    case ${_selected[constants]} in
+        (5) {
+            setState "SETTINGS"
+            _selected["constants"]=0
+        };;
+    esac
+
+    saveSettings
 }
 
 renderScreen()
@@ -330,6 +355,9 @@ renderScreen()
         };;
         (3) {
             renderSettings
+        };;
+        (4) {
+            renderConstants
         };;
     esac
 }

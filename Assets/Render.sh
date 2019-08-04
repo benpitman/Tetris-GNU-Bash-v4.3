@@ -108,7 +108,7 @@ destroyLines ()
     local -a -- lineIndexes=($*)
 
     # If we're in a colour mode, show a white strip before clearing the line
-    if ! [[ "$_colourMode" =~ (${COLOUR_MODES[2]}|${COLOUR_MODES[3]}) ]]; then
+    if (( $_colourMode == 0 || $_colourMode == 1 )); then
         for xPos in ${X_POSITIONS[@]}; do
             for yPos in $*; do
                 navigateTo $yPos $xPos
