@@ -400,7 +400,8 @@ declare -Arg STATES=(
     ['FIELD']=1
     ['SCORES']=2
     ['SETTINGS']=3
-    ['GAME_OVER']=4
+    ['CONSTANTS']=4
+    ['GAME_OVER']=5
 )
 
 setState ()
@@ -438,15 +439,15 @@ declare -Arg -- MAIN_MENU=(
 )
 
 declare -arg -- SETTINGS_OPTIONS=(
-    'COLOUR  MODE'
-    'GAME  MODE'
+    'COLOUR MODE'
+    'GAME MODE'
     'CONSTANTS'
     'BACK'
 )
 
 # Settings menu options
 declare -Arg -- SETTINGS_MENU=(
-    ['MAX']=4
+    ['MAX']=3
     ['OPTIONS']='SETTINGS_OPTIONS'
     ['PADDING']=' '
 
@@ -457,7 +458,7 @@ declare -Arg -- SETTINGS_MENU=(
     ['1,X']=6
 
     ['2,Y']=14
-    ['2,X']=7
+    ['2,X']=6
 
     ['3,Y']=22
     ['3,X']=9
@@ -485,7 +486,7 @@ declare -Arg -- SETTINGS_CLEAR_SUB_MENU=(
 
 # Clears the chosen items for repopulation
 declare -Arg -- SETTINGS_SUB_MENU=(
-    ['MAX']=3
+    ['MAX']=2
     ['WIDTH']=11
 
     ['0,FUNCTION']='getReadableColourMode'
@@ -524,24 +525,25 @@ declare -arg -- CONSTANTS_OPTIONS=(
 # Settings menu options
 declare -Arg -- CONSTANTS_MENU=(
     ['MAX']=5
+    ['OPTIONS']="CONSTANTS_OPTIONS"
     ['PADDING']=' '
 
-    ['0,Y']=12
+    ['0,Y']=9
     ['0,X']=5
 
-    ['1,Y']=12
-    ['1,X']=6
+    ['1,Y']=11
+    ['1,X']=5
 
-    ['2,Y']=14
-    ['2,X']=7
+    ['2,Y']=13
+    ['2,X']=5
     ['2,NOTE']='(Can cause flicker)'
 
-    ['3,Y']=10
-    ['3,X']=8
+    ['3,Y']=15
+    ['3,X']=5
     ['3,NOTE']='All inputs logged for playback'
 
-    ['4,Y']=11
-    ['4,X']=9
+    ['4,Y']=17
+    ['4,X']=5
 
     ['5,Y']=21
     ['5,X']=12
@@ -681,7 +683,11 @@ declare -rg -- BLOCK='\u2588\u2588'
 
 setColours()
 {
-    case $_colourMode in
+    local -- colourMode
+
+    getReadableColourMode "colourMode"
+
+    case $colourMode in
         'NORMAL')
             declare -ag -- COLOURS=(
                 [0]=$'\e[0m'        # Default

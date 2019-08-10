@@ -6,7 +6,6 @@ navigateMenu()
     local -- menuIndex
     local -- optionText
     local -- selected=${2:-0}
-    local -- text
 
     local -n -- menu="$1"
     local -n -- menuOptions="${menu[OPTIONS]}"
@@ -15,13 +14,7 @@ navigateMenu()
         for (( menuIndex = 0; $menuIndex < (${menu[MAX]} + 1); menuIndex++ )); do
             (( $menuIndex == $selected )) && optionText="\e[7m" || optionText="\e[27m"
 
-            if [[ -n "${menuOptions[$menuIndex]}" ]]; then
-                text=${menuOptions[$menuIndex]}
-            elif [[ -n "${menuOptions[$menuIndex,FUNCTION]}" ]]; then
-                ${menuOptions[$menuIndex,FUNCTION]} "text"
-            fi
-
-            optionText+="${menu[PADDING]}$text${menu[PADDING]}\e[27m"
+            optionText+="${menu[PADDING]}${menuOptions[$menuIndex]}${menu[PADDING]}\e[27m"
             navigateTo ${menu[$menuIndex,Y]} ${menu[$menuIndex,X]}
             renderText "$optionText"
         done
@@ -82,7 +75,12 @@ renderPartial()
     done
 
     for (( partial = 0; $partial < (${partialOptions[MAX]} + 1); partial++ )); do
-        optionText="${!partialOptions[$partial]}"
+        if [[ -n "${partialOptions[$partial]}" ]]; then
+            optionText=${partialOptions[$partial]}
+        fi
+
+        [[ -n "${partialOptions[$partial,FUNCTION]}" ]] && "${partialOptions[$partial,FUNCTION]}" "optionText"
+
         half=$(( (${partialOptions[WIDTH]} - ${#optionText}) / 2 ))
         navigateTo ${partialOptions[$partial,Y]} $(( ${partialOptions[$partial,X]} + $half + 1 ))
         renderText "$optionText"
@@ -312,7 +310,7 @@ renderSettings()
             setState "CONSTANTS"
             _selected["constants"]=0
         };;
-        (4) {
+        (3) {
             setState "MAIN" # Return to main menu
             _selected["settings"]=0
         };;

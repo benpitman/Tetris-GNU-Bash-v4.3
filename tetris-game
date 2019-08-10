@@ -105,7 +105,7 @@ ghostPiece ()
         firstLoop=0
         _ghostY=$nextY
     done
-    $firstLoop && return
+    (( $firstLoop )) && return
 
     renderGhost "$_currentPiece" $_ghostY $_pieceX
 }
