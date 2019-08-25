@@ -31,7 +31,40 @@ alert ()
 
 pause ()
 {
+    local -- pauseIndex
+
+    buildPauseScreen
+
+    for pauseIndex in ${!PAUSE_SCREEN[@]}; do
+        navigateTo ${pauseIndex%,*} ${pauseIndex#*,}
+        renderText "${COLOURS[${PAUSE_SCREEN[$pauseIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
+    done
+
     alert "PAUSED" 1 "[Pp]"
+
+    refreshPlayingField
+}
+
+renderPerfectClear ()
+{
+    local -- perfectIndex=0
+
+    while (( $perfectIndex <= ${FIELD_OPTIONS[PERFECT,MAX]} )); do
+        navigateTo ${FIELD_OPTIONS[PERFECT,$perfectIndex,Y]} ${FIELD_OPTIONS[PERFECT,$perfectIndex,X]}
+        renderText "${FIELD_OPTIONS[PERFECT,$perfectIndex]}"
+
+        (( perfectIndex++ ))
+    done
+
+    sleep 2
+    perfectIndex=0
+
+    while (( $perfectIndex <= ${FIELD_OPTIONS[PERFECT,MAX]} )); do
+        navigateTo ${FIELD_OPTIONS[PERFECT,$perfectIndex,Y]} ${FIELD_OPTIONS[PERFECT,$perfectIndex,X]}
+        renderText "${FIELD_OPTIONS[PERFECT,$perfectIndex,CLEAR]}"
+
+        (( perfectIndex++ ))
+    done
 }
 
 levelUp ()
@@ -49,6 +82,7 @@ scoreUp ()
     local -- modifier
     local -- numLines=$1
     local -- paddedText
+    local -- perfect=${2:-0}
 
     case $1 in
         1)  modifier=40;;
@@ -57,7 +91,10 @@ scoreUp ()
         4)  modifier=1200;;
     esac
 
-    (( _score += $modifier * ($_level + 1) ))
+    (( modifier *= ($_level + 1) ))
+    (( $perfect && (modifier *= 2) ))
+    (( _score += $modifier ))
+
     navigateTo ${FIELD_OPTIONS[SCORE,Y]} ${FIELD_OPTIONS[SCORE,X]}
     printf -v paddedText "%${FIELD_OPTIONS[SCORE,WIDTH]}s" $_score
     renderText "$paddedText"
@@ -68,8 +105,9 @@ lineUp ()
     local -- lineIndex=0
     local -- numLines=$1
     local -- paddedText
+    local -- perfect=${2:-0}
 
-    scoreUp $numLines
+    scoreUp $numLines $perfect
     while (( lineIndex++ < $numLines )); do
         (( ++_lines % 10 )) || levelUp
     done
@@ -92,6 +130,8 @@ lineUp ()
     navigateTo ${FIELD_OPTIONS[LINES,Y]} ${FIELD_OPTIONS[LINES,X]}
     printf -v paddedText "%${FIELD_OPTIONS[LINES,WIDTH]}s" $_lines
     renderText "$paddedText"
+
+    (( $perfect )) && renderPerfectClear
 }
 
 destroyLines ()
@@ -153,45 +193,65 @@ destroyLines ()
             _lock[$(( $yPlus + $offset )),$xPlus]=$colour
         done
 
-        (( $zeroes == 10 )) && break || zeroes=0    # Blank line detected (no further lines above can have colour)
+        (( $zeroes == 10 )) && break || zeroes=0 # Blank line detected (no further lines above can have colour)
     done
 }
 
 checkLines ()
 {
     local -- lineIsFull
+    local -- perfect=0
+    local -- perfectYCheck
     local -- xPos
     local -- yPos
 
     local -a -- toCheck=($*)
     local -a -- toDestroy=()
 
+    # Calculate lines to destroy
     for yPos in ${toCheck[@]}; do
         lineIsFull=1
 
         for xPos in ${X_POSITIONS[@]}; do
             # If any block on a line does not have colour, skip this line
-            if ! (( ${_lock[$yPos,$xPos]} )); then
+            if (( ${_lock[$yPos,$xPos]} == 0 )); then
                 lineIsFull=0
                 break
             fi
         done
 
-        (( $lineIsFull )) && toDestroy[$yPos]=
+        (( $lineIsFull )) && toDestroy[$yPos]=1
     done
+
+    # If all Y coordinates from the placed tetromino will be removed
+    if (( ${#toDestroy[@]} == ${#toCheck[@]} )); then
+        perfect=1
+        perfectYCheck=$(( ${toCheck[0]} - 1 ))
+
+        # Calculate if the line above is clear
+        if (( $perfectYCheck >= $CEILING )); then
+            for xPos in ${X_POSITIONS[@]}; do
+                # If any block on this line has colour, a clear was not made
+                if (( ${_lock[$perfectYCheck,$xPos]} )); then
+                    perfect=0
+                    break
+                fi
+            done
+        fi
+    fi
 
     if (( ${#toDestroy[@]} )); then
         destroyLines ${!toDestroy[@]}
-        lineUp ${#toDestroy[@]}
+        lineUp ${#toDestroy[@]} $perfect
     fi
 }
 
 lockPiece ()
 {
     local -- coord
-    local -- pieceKey=$1
-    local -- xPos=$3
-    local -- yPos=$2
+    local -- pieceKey=$_currentPiece
+    local -- xPos=$_pieceX
+    local -- yPos=$_pieceY
 
     local -a -- toCheck=()
     local -n -- piece="$pieceKey"
@@ -202,6 +262,23 @@ lockPiece ()
     done
 
     checkLines ${!toCheck[@]}
+}
+
+refreshPlayingField ()
+{
+    local -- lockIndex
+
+    for lockIndex in ${!_lock[@]}; do
+        navigateTo ${lockIndex%,*} ${lockIndex#*,}
+        if (( ${_lock[$lockIndex]} )); then
+            renderText "${COLOURS[${_lock[$lockIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
+        else
+            renderText "$BLANK"
+        fi
+    done
+
+    renderGhost
+    renderPiece
 }
 
 canRender ()
@@ -231,12 +308,12 @@ canRender ()
     done
 }
 
-renderPiece ()
+renderObject ()
 {
     local -- coord
     local -- pieceKey=$1
     local -- tile
-    local -- tileType=${4:-BLOCK}
+    local -- tileType=$4
     local -- xPos=$3
     local -- yPos=$2
 
@@ -252,18 +329,28 @@ renderPiece ()
 
 renderGhost ()
 {
-    renderPiece "$1" $2 $3 'GHOST'
+    renderObject "$_currentPiece" $_ghostY $_pieceX 'GHOST'
+}
+
+removeGhost ()
+{
+    renderObject "$_currentPiece" $_ghostY $_pieceX 'BLANK'
+}
+
+renderPiece ()
+{
+    renderObject "$_currentPiece" $_pieceY $_pieceX 'BLOCK'
 }
 
 removePiece ()
 {
-    renderPiece "$1" $2 $3 'BLANK'
+    renderObject "$_currentPiece" $_pieceY $_pieceX 'BLANK'
 }
 
 renderNextPiece ()
 {
-    removePiece "$_currentPiece" ${NEXT_PIECE[$_currentPiece,Y]} ${NEXT_PIECE[$_currentPiece,X]}
-    renderPiece "$_nextPiece" ${NEXT_PIECE[$_nextPiece,Y]} ${NEXT_PIECE[$_nextPiece,X]}
+    renderObject "$_currentPiece" ${NEXT_PIECE[$_currentPiece,Y]} ${NEXT_PIECE[$_currentPiece,X]} 'BLANK'
+    renderObject "$_nextPiece" ${NEXT_PIECE[$_nextPiece,Y]} ${NEXT_PIECE[$_nextPiece,X]} 'BLOCK'
 }
 
 navigateTo ()

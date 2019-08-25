@@ -1,29 +1,12 @@
-movePiece ()
+loadPiece ()
 {
-    local -- moveType=$1
-    local -- moveConstant=
-
-    case $moveType in
-        (0) {
-            translatePiece
-            (( $_loggingIsSet )) && logTranslate
-        };;
-        (1) {
-            rotatePiece
-            (( $_loggingIsSet )) && logRotate
-        };;
-        (2) {
-            dropPiece
-            (( $_loggingIsSet )) && logTranslate
-        };;
-        (3) {
-            (( $_loggingIsSet )) && logLoad
-        };;
-    esac
+    (( $_loggingIsSet )) && logLoad
 }
 
 translatePiece ()
 {
+    (( $_loggingIsSet )) && logTranslate
+
     local -- nextX=$_pieceX
     local -- nextY=$_pieceY
 
@@ -43,16 +26,16 @@ translatePiece ()
     canRender "$_currentPiece" $nextY $nextX
 
     if (( $? == 0 )); then
-        removePiece "$_currentPiece" $_pieceY $_pieceX
-        [[ "$_direction" != "$DOWN" ]] && (( $_ghostingIsSet )) && removePiece "$_currentPiece" $_ghostY $_pieceX
+        removePiece
+        [[ "$_direction" != "$DOWN" ]] && (( $_ghostingIsSet )) && removeGhost
 
         _pieceX=$nextX
         _pieceY=$nextY
 
         [[ "$_direction" != "$DOWN" ]] && (( $_ghostingIsSet )) && ghostPiece
-        renderPiece "$_currentPiece" $_pieceY $_pieceX
+        renderPiece
     elif [[ "$_direction" == "$DOWN" ]]; then
-        lockPiece "$_currentPiece" $_pieceY $_pieceX
+        lockPiece
         _newPiece=1
     fi
 }
@@ -63,13 +46,14 @@ rotatePiece ()
     if [[ "$_gameMode" == "ROTATE" ]]; then
         (( $_rotation == 3 )) && return
     fi
+    (( $_loggingIsSet )) && logRotate
 
     local -- captureRotation=$_rotation
     local -- xPos=$_pieceX
     local -- yPos=$_pieceY
 
-    removePiece "$_currentPiece" $_pieceY $_pieceX
-    (( $_ghostingIsSet )) && removePiece "$_currentPiece" $_ghostY $_pieceX
+    removePiece
+    (( $_ghostingIsSet )) && removeGhost
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
@@ -88,7 +72,7 @@ rotatePiece ()
             };; # Left wall
             (2|4) {
                 _rotation=$captureRotation
-                renderPiece "$_currentPiece" $_pieceY $_pieceX
+                renderPiece
                 return
             };; # Floor or another tetromino
         esac
@@ -98,30 +82,38 @@ rotatePiece ()
     _pieceY=$yPos
 
     (( $_ghostingIsSet )) && ghostPiece
-    renderPiece "$_currentPiece" $_pieceY $_pieceX
+    renderPiece
 }
 
 dropPiece ()
 {
+    (( $_loggingIsSet )) && logTranslate
+
     local -- nextY=$_pieceY
 
-    removePiece "$_currentPiece" $_pieceY $_pieceX
+    removePiece
 
     while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
         _pieceY=$nextY
     done
 
-    renderPiece "$_currentPiece" $_pieceY $_pieceX
-    lockPiece "$_currentPiece" $_pieceY $_pieceX
+    renderPiece
+    lockPiece
     _newPiece=1
 }
 
 logInput ()
 {
     case "$1" in
-        ('LOAD')      printf '%s' $_currentPiece;;
-        ('TRANSLATE') printf '%s' $_direction;;
-        ('ROTATE')    printf '%s' 'R';;
+        (0) {
+            printf "%s" $_currentPiece
+        };;
+        (1) {
+            printf "%s" $_direction
+        };;
+        (2) {
+            printf "%s" "R"
+        };;
     esac >> "$INPUT_LOG"
 }
 
