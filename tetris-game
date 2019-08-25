@@ -97,15 +97,15 @@ fi
 
 ghostPiece ()
 {
-    local -- firstLoop=1
+    local -- loopCount=0
     local -- nextY=$_pieceY
 
     _ghostY=$nextY
     while canRender "$_currentPiece" $(( ++nextY )) $_pieceX; do
-        firstLoop=0
+        (( loopCount++ ))
         _ghostY=$nextY
     done
-    (( $firstLoop )) && return
+    (( $loopCount )) || return
 
     renderGhost "$_currentPiece" $_ghostY $_pieceX
 }

@@ -151,19 +151,19 @@ if (( $_inTTY == 0 )); then
         '│                                        │'
         '│                                        │'
         '│                                        │'
-        '│                      ┌──────────────┐  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      └──────────────┘  │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
         '│                                        │'
         '│                                        │'
         '│                                        │'
@@ -311,19 +311,19 @@ else
         '│                                        │'
         '│                                        │'
         '│                                        │'
-        '│                      ┌──────────────┐  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      │              │  │'
-        '│                      └──────────────┘  │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
+        '│                                        │'
         '│                                        │'
         '│                                        │'
         '│                                        │'
@@ -468,7 +468,7 @@ declare -Arg -- SETTINGS_MENU=(
 declare -Arg -- SETTINGS_CLEAR_SUB_MENU=(
     ['MAX']=11
 
-    ['Y']=9
+    ['Y']=8
     ['X']=25
 
      ['0']='┌────────────┐'
@@ -519,12 +519,13 @@ declare -arg -- CONSTANTS_OPTIONS=(
     "GHOST"
     "RECORD INPUTS"
     "ROTATE ONCE"
+    "MEMORY GAME"
     "BACK"
 )
 
 # Settings menu options
 declare -Arg -- CONSTANTS_MENU=(
-    ['MAX']=5
+    ['MAX']=6
     ['OPTIONS']="CONSTANTS_OPTIONS"
     ['PADDING']=' '
 
@@ -544,9 +545,14 @@ declare -Arg -- CONSTANTS_MENU=(
 
     ['4,Y']=17
     ['4,X']=5
+    ['4,NOTE']="Limited to 3 rotations per tetromino"
 
-    ['5,Y']=21
-    ['5,X']=12
+    ['5,Y']=19
+    ['5,X']=5
+    ['5,NOTE']="Tetrominoes will fade out once placed"
+
+    ['6,Y']=22
+    ['6,X']=9
 )
 
 declare -arg -- COLOUR_MODES=(
@@ -562,30 +568,30 @@ declare -Arg -- SETTINGS_COLOUR_SUB_MENU=(
     ['OPTIONS']='COLOUR_MODES'
     ['PADDING']='  '
 
-    ['0,Y']=11
+    ['0,Y']=10
     ['0,X']=27
     ['0,NOTE']="Original Tetris colours"
 
-    ['1,Y']=13
+    ['1,Y']=12
     ['1,X']=27
     ['1,NOTE']="Reduced colours for lower colour depth"
 
-    ['2,Y']=15
+    ['2,Y']=14
     ['2,X']=27
     ['2,NOTE']="White on black"
 
-    ['3,Y']=17
+    ['3,Y']=16
     ['3,X']=27
     ['3,NOTE']="Black on white"
 )
 
-declare -arg -- GAME_MODES=(
+# These two are not readonly becuase of the secret heart mode
+declare -ag -- GAME_MODES=(
     'NORMAL'
-    'ROTATE'
-    'FORGET'    # May not be implemented
+    ' HARD '
 )
 
-declare -Arg -- SETTINGS_GAME_SUB_MENU=(
+declare -Ag -- SETTINGS_GAME_SUB_MENU=(
     ['MAX']=1
     ['OPTIONS']='GAME_MODES'
     ['PADDING']='  '
@@ -596,11 +602,6 @@ declare -Arg -- SETTINGS_GAME_SUB_MENU=(
 
     ['1,Y']=13
     ['1,X']=27
-    ['1,NOTE']="Limited to 3 rotations per tetromino"
-
-    ['2,Y']=17
-    ['2,X']=27
-    ['2,NOTE']="Placed tetrominoes fade out over time"
 )
 
 declare -arg SCORES_OPTIONS=(

@@ -191,17 +191,14 @@ lockPiece ()
     local -- coord
     local -- pieceKey=$1
     local -- xPos=$3
-    local -- xAx
     local -- yPos=$2
-    local -- yAx
 
     local -a -- toCheck=()
     local -n -- piece="$pieceKey"
 
     for coord in ${piece[$_rotation]}; do
-        IFS=, read -r xAx yAx <<< $coord
-        toCheck[(( $yPos + $yAx ))]= # Save as keys to avoid duplicates
-        _lock[$(( $yPos + $yAx )),$(( $xPos + ($xAx * 2) ))]=${COLOURS_LOOKUP[$pieceKey]}
+        toCheck[(( $yPos + ${coord#*,} ))]= # Save as keys to avoid duplicates
+        _lock[$(( $yPos + ${coord#*,} )),$(( $xPos + (${coord%,*} * 2) ))]=${COLOURS_LOOKUP[$pieceKey]}
     done
 
     checkLines ${!toCheck[@]}

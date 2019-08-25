@@ -323,11 +323,12 @@ renderConstants()
 {
     renderText "${CONSTANTS_SCREEN[@]}"
 
+    renderPartial "CONSTANTS_SUB_MENU"
     navigateMenu "CONSTANTS_MENU" ${_selected[constants]}
     _selected["constants"]=$?
 
     case ${_selected[constants]} in
-        (5) {
+        (6) {
             setState "SETTINGS"
             _selected["constants"]=0
         };;
