@@ -107,10 +107,10 @@ ghostPiece ()
     done
     (( $firstLoop )) && return
 
-    renderGhost "$_currentPiece" $_ghostY $_pieceX
+    renderGhost
 }
 
-setDefaults ()
+loadNewPiece ()
 {
     if  (( $_replay )); then
         _currentPiece=${_replayInputs[$(( _replayIndex++ ))]}
@@ -118,10 +118,16 @@ setDefaults ()
         if [[ "$_nextPiece" != "" ]]; then
             _currentPiece=$_nextPiece
         else
-            _currentPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+            while {
+                _currentPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+                [[ "$_currentPiece" == [SZ] ]]
+            }; do
+                continue
+            done
         fi
 
         _nextPiece=${PIECES[$(( $RANDOM % ${#PIECES[@]} ))]}
+
     fi
 
     # Starting geometry for new pieces
@@ -130,7 +136,7 @@ setDefaults ()
     _pieceX=${START_POSITION#*,}
     _pieceY=${START_POSITION%,*}
 
-    movePiece 3
+    loadPiece
 }
 
 replayGameLoop ()
@@ -146,26 +152,26 @@ replayGameLoop ()
             intrap
         fi
         if (( $_newPiece )); then
-            setDefaults
+            loadNewPiece
             canRender "$_currentPiece" $_pieceY $_pieceX
             (( $? )) && continue
 
-            renderPiece "$_currentPiece" $_pieceY $_pieceX
+            renderPiece
             (( $_ghostingIsSet )) && ghostPiece
             clearBuffer
         elif (( $updatePosition )); then
-            movePiece 0
+            translatePiece
             updatePosition=0
             (( $_newPiece )) && continue
         fi
 
         case ${_replayInputs[$(( _replayIndex++ ))]} in
             ("R") {
-                movePiece 1
+                rotatePiece
             };;
             ($UP) {
                 _direction=$UP
-                movePiece 2
+                dropPiece
             };;
             ($DOWN) {
                 _direction=$DOWN
@@ -205,21 +211,21 @@ gameLoop ()
 
     while true; do
         if (( $_newPiece )); then
-            setDefaults
+            loadNewPiece
             canRender "$_currentPiece" $_pieceY $_pieceX
             if (( $? )); then
-                renderPiece "$_currentPiece" $_pieceY $_pieceX
+                renderPiece
                 alert "GAME_OVER"
                 setState "SCORES"
                 return
             fi
 
-            renderPiece "$_currentPiece" $_pieceY $_pieceX
+            renderPiece
             (( $_ghostingIsSet )) && ghostPiece
             renderNextPiece
             clearBuffer
         elif (( $updatePosition )); then
-            movePiece 0
+            translatePiece
             updatePosition=0
             (( $_newPiece )) && continue
         fi
@@ -245,7 +251,7 @@ gameLoop ()
         if (( $readStatus != 142 )); then
             # If enter or space is pressed
             if [[ "$key1" == "" ]] || [[ "$key1" == " " ]]; then
-                movePiece 1
+                rotatePiece
                 sleep 0.05
             elif [[ "$key1" == [Pp] ]] && [[ "$key2" == "" && "$key3" == "" ]]; then
                 pause
@@ -253,7 +259,7 @@ gameLoop ()
                 case $key3 in
                     ($UP) {
                         _direction=$UP
-                        movePiece 2
+                        dropPiece
                     };;
                     ($DOWN) {
                         _direction=$DOWN
