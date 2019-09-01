@@ -1,11 +1,11 @@
 loadPiece ()
 {
-    (( $_loggingIsSet )) && logLoad
+    recordEnabled && logLoad
 }
 
 translatePiece ()
 {
-    (( $_loggingIsSet )) && logTranslate
+    recordEnabled && logTranslate
 
     local -- nextX=$_pieceX
     local -- nextY=$_pieceY
@@ -27,12 +27,12 @@ translatePiece ()
 
     if (( $? == 0 )); then
         removePiece
-        [[ "$_direction" != "$DOWN" ]] && (( $_ghostingIsSet )) && removeGhost
+        [[ "$_direction" != "$DOWN" ]] && ghostEnabled && removeGhost
 
         _pieceX=$nextX
         _pieceY=$nextY
 
-        [[ "$_direction" != "$DOWN" ]] && (( $_ghostingIsSet )) && ghostPiece
+        [[ "$_direction" != "$DOWN" ]] && ghostEnabled && ghostPiece
         renderPiece
     elif [[ "$_direction" == "$DOWN" ]]; then
         lockPiece
@@ -42,18 +42,15 @@ translatePiece ()
 
 rotatePiece ()
 {
-    # (( $_gameMode == 1 && $_rotation == 3 )) && return
-    if [[ "$_gameMode" == "ROTATE" ]]; then
-        (( $_rotation == 3 )) && return
-    fi
-    (( $_loggingIsSet )) && logRotate
+    rotateEnabled && (( $_rotation == 3 )) && return
+    recordEnabled && logRotate
 
     local -- captureRotation=$_rotation
     local -- xPos=$_pieceX
     local -- yPos=$_pieceY
 
     removePiece
-    (( $_ghostingIsSet )) && removeGhost
+    ghostEnabled && removeGhost
 
     (( _rotation == 3 ? _rotation = 0 : _rotation++ ))
 
@@ -81,13 +78,13 @@ rotatePiece ()
     _pieceX=$xPos
     _pieceY=$yPos
 
-    (( $_ghostingIsSet )) && ghostPiece
+    ghostEnabled && ghostPiece
     renderPiece
 }
 
 dropPiece ()
 {
-    (( $_loggingIsSet )) && logTranslate
+    recordEnabled && logTranslate
 
     local -- nextY=$_pieceY
 

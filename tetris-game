@@ -20,45 +20,36 @@ if [[ -n "$1" && ! "$1" =~ 0|1 ]]; then
     exit 1
 fi
 
-intrap ()
+die ()
 {
     tput cvvis
-    printf "\e[0m\e[24;1H\n"
+    printf "\e[0m\e[23;1H\n\n"
+    stty sane
     exit 0
 }
-trap intrap INT
-trap "stty sane" EXIT
+trap die INT EXIT
 
-declare -g -- _alertTimeout=0
-declare -g -- _colourMode=
-declare -g -- _currentPiece=
-declare -g -- _debug=${1:-0}
-declare -g -- _direction=
-declare -g -- _gameMode=0
-declare -g -- _ghostingIsSet=0
-declare -g -- _ghostY=
-declare -g -- _holdingIsSet=0
-declare -g -- _inTTY=
-declare -g -- _level=
-declare -g -- _lines=
-declare -g -- _loggingIsSet=0
-declare -g -- _newPiece=1
-declare -g -- _nextPiece=
-declare -g -- _pieceX=
-declare -g -- _pieceY=
-declare -g -- _replay=0
-declare -g -- _replayIndex=0
-declare -g -- _rotation=
-declare -g -- _score=0
-declare -g -- _state=0
+declare -arg -- AUTOLOAD=(
+    "Core/Globals"
+    "Core/Constants"
 
-declare -ag -- _replayInputs=()
+    "Logic/Getters"
+    "Logic/Setters"
 
-declare -Ag _selected=(
-    ["main"]=0
-    ["settings"]=0
-    ["constants"]=0
+    "Boot"
+    "Theme"
+
+    "Navigation"
+    "Movement"
+    "Pause"
+    "Render"
 )
+
+for import in "${AUTOLOAD[@]}"; do
+    source "./Assets/${import}.sh"
+done
+unset import
+
 
 if [[ -n "$2" && -s "$2" ]]; then
     _replay=1
@@ -69,31 +60,7 @@ fi
 stty -echo  # Disable echo
 tput civis  # Disable cursor blinker
 
-# If game is loaded on a terminal outside of a GUI environment
-if [[ "$DISPLAY" == "" ]] || [[ "$TERM" == "linux" ]]; then
-    _inTTY=1
-    _colourMode=1 # SIMPLE
-else
-    _inTTY=0
-    _colourMode=0 # NORMAL
-fi
-
-# Import the asset files
-for asset in Assets/*; do
-    source "$asset"
-done
-unset asset
-
-setColours
-touch "$HIGHSCORE_LOG" # Create score log if doesn"t exist
-
-if (( $_debug )); then
-    # Debug mode sends STDERR to an error file
-    exec 2>"$DEBUG_LOG"
-    set -xT
-else
-    exec 2>"$ERROR_LOG"
-fi
+boot
 
 ghostPiece ()
 {
@@ -112,7 +79,7 @@ ghostPiece ()
 
 loadNewPiece ()
 {
-    if  (( $_replay )); then
+    if (( $_replay )); then
         _currentPiece=${_replayInputs[$(( _replayIndex++ ))]}
     else
         if [[ "$_nextPiece" != "" ]]; then
@@ -149,7 +116,7 @@ replayGameLoop ()
     while true; do
         if [[ "${_replayInputs[$_replayIndex]}" == "" ]]; then
             alert "END_REPLAY"
-            intrap
+            die
         fi
         if (( $_newPiece )); then
             loadNewPiece
@@ -157,7 +124,7 @@ replayGameLoop ()
             (( $? )) && continue
 
             renderPiece
-            (( $_ghostingIsSet )) && ghostPiece
+            ghostEnabled && ghostPiece
             clearBuffer
         elif (( $updatePosition )); then
             translatePiece
@@ -221,8 +188,8 @@ gameLoop ()
             fi
 
             renderPiece
-            (( $_ghostingIsSet )) && ghostPiece
-            renderNextPiece
+            ghostEnabled && ghostPiece
+            nextEnabled && renderNextPiece
             clearBuffer
         elif (( $updatePosition )); then
             translatePiece
@@ -311,7 +278,7 @@ newGame ()
     declare -Ag -- _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
 
     # Truncate input log file
-    (( $_loggingIsSet )) && : > "$INPUT_LOG"
+    recordEnabled && >"$INPUT_LOG"
 
     # scoreModifier false
      (( $_replay )) && replayGameLoop || gameLoop

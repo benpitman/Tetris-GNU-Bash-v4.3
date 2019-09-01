@@ -1,4 +1,4 @@
-navigateMenu()
+navigateMenu ()
 {
     local -- key1
     local -- key2
@@ -48,7 +48,7 @@ navigateMenu()
     return $selected
 }
 
-clearSubMenu()
+clearSubMenu ()
 {
     local -- subIndex
 
@@ -60,7 +60,7 @@ clearSubMenu()
     done
 }
 
-renderPartial()
+renderPartial ()
 {
     local -- clear
     local -- half
@@ -87,7 +87,7 @@ renderPartial()
     done
 }
 
-renderMain()
+renderMain ()
 {
     renderText "${MAIN_SCREEN[@]}"
 
@@ -107,17 +107,17 @@ renderMain()
             setState 'CONSTANTS' # Constants
         };;
         (3) {
-            intrap
+            die
         };;
     esac
 }
 
-renderField()
+renderField ()
 {
     renderText "${FIELD_SCREEN[@]}"
 }
 
-renderScores()
+renderScores ()
 {
     local -- editableIndex
     local -- editableRow
@@ -195,7 +195,7 @@ renderScores()
     setState 'MAIN'
 }
 
-printScore()
+printScore ()
 {
     local -- bold=${6:-0}
     local -- index=$3
@@ -210,6 +210,7 @@ printScore()
 
     # Make the score human readable
     printf -v readableScore "%'d" $score
+    [[ "$readableScore" == "0" ]] && readableScore=
 
     (( pad = ${SCORES[WIDTH]} - (4 + ${#name} + ${#readableScore}) ))
     eval printf -v spacer "%.0s." {1..$pad}
@@ -220,7 +221,7 @@ printScore()
     renderText "$paddedScore"
 }
 
-textEntry()
+textEntry ()
 {
     local -- inputString
     local -- key
@@ -272,20 +273,16 @@ textEntry()
     stty -echo
 }
 
-saveSettings()
+saveSettings ()
 {
     if (( $LEGACY )); then
-        printf "%s='%s'\n" _colourMode $_colourMode
-        printf "%s='%s'\n" _gameMode $_gameMode
-        printf "%s='%s'\n" _ghostingIsSet $_ghostingIsSet
-        printf "%s='%s'\n" _holdingIsSet $_holdingIsSet
-        printf "%s='%s'\n" _loggingIsSet $_loggingIsSet
+        declare -p -- _gameBooleans
     else
-        printf "%s\n" ${_colourMode@A} ${_gameMode@A} ${_ghostingIsSet@A} ${_holdingIsSet@A} ${_loggingIsSet@A}
+        echo "${_gameBooleans[@]@A}"
     fi > "$SETTINGS"
 }
 
-renderSettings()
+renderSettings ()
 {
     renderText "${SETTINGS_SCREEN[@]}"
 
@@ -319,11 +316,10 @@ renderSettings()
     saveSettings
 }
 
-renderConstants()
+renderConstants ()
 {
     renderText "${CONSTANTS_SCREEN[@]}"
 
-    renderPartial "CONSTANTS_SUB_MENU"
     navigateMenu "CONSTANTS_MENU" ${_selected[constants]}
     _selected["constants"]=$?
 
@@ -332,12 +328,15 @@ renderConstants()
             setState "SETTINGS"
             _selected["constants"]=0
         };;
+        (*) {
+            "${CONSTANTS_MENU[${_selected[constants]},RUN]}"
+        };;
     esac
 
     saveSettings
 }
 
-renderScreen()
+renderScreen ()
 {
     case $_state in
         (*) {
@@ -361,12 +360,12 @@ renderScreen()
     esac
 }
 
-clearScreen()
+clearScreen ()
 {
     printf "\e[2J\e[1;1H"
 }
 
-clearBuffer()
+clearBuffer ()
 {
     read -n10000 -t0.0001 # Clear input buffer
 }
