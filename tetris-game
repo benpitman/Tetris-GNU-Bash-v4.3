@@ -100,8 +100,8 @@ loadNewPiece ()
     # Starting geometry for new pieces
     _rotation=0
     _newPiece=0
-    _pieceX=${START_POSITION#*,}
-    _pieceY=${START_POSITION%,*}
+    _pieceY=$START_Y
+    _pieceX=$START_X
 
     loadPiece
 }
@@ -136,20 +136,20 @@ replayGameLoop ()
             ("R") {
                 rotatePiece
             };;
-            ($UP) {
-                _direction=$UP
+            ($KEY_UP) {
+                _direction=$KEY_UP
                 dropPiece
             };;
-            ($DOWN) {
-                _direction=$DOWN
+            ($KEY_DOWN) {
+                _direction=$KEY_DOWN
                 updatePosition=1
             };;
-            ($RIGHT) {
-                _direction=$RIGHT
+            ($KEY_RIGHT) {
+                _direction=$KEY_RIGHT
                 updatePosition=1
             };;
-            ($LEFT) {
-                _direction=$LEFT
+            ($KEY_LEFT) {
+                _direction=$KEY_LEFT
                 updatePosition=1
             };;
         esac
@@ -183,7 +183,7 @@ gameLoop ()
             if (( $? )); then
                 renderPiece
                 alert "GAME_OVER"
-                setState "SCORES"
+                setScoresState
                 return
             fi
 
@@ -224,20 +224,20 @@ gameLoop ()
                 pause
             elif [[ "$key1" == $'\e' ]] && [[ "$key2" != "" ]]; then # If escape character is pressed
                 case $key3 in
-                    ($UP) {
-                        _direction=$UP
+                    ($KEY_UP) {
+                        _direction=$KEY_UP
                         dropPiece
                     };;
-                    ($DOWN) {
-                        _direction=$DOWN
+                    ($KEY_DOWN) {
+                        _direction=$KEY_DOWN
                         updatePosition=1
                     };;
-                    ($RIGHT) {
-                        _direction=$RIGHT
+                    ($KEY_RIGHT) {
+                        _direction=$KEY_RIGHT
                         updatePosition=1
                     };;
-                    ($LEFT) {
-                        _direction=$LEFT
+                    ($KEY_LEFT) {
+                        _direction=$KEY_LEFT
                         updatePosition=1
                     };;
                 esac
@@ -256,7 +256,7 @@ gameLoop ()
 
         if (( $timeTaken >= $speed )); then
             updatePosition=1
-            _direction=$DOWN
+            _direction=$KEY_DOWN
             timeTaken=0
 
             printf -v unixTime "%(%s)T" -1

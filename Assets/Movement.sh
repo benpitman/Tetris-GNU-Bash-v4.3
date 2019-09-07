@@ -11,14 +11,14 @@ translatePiece ()
     local -- nextY=$_pieceY
 
     case $_direction in
-        ($DOWN) {
+        ($KEY_DOWN) {
             timeTaken=0 # Reset timer
             (( nextY++ ))
         };;
-        ($RIGHT) {
+        ($KEY_RIGHT) {
             (( nextX += 2 ))
         };;
-        ($LEFT) {
+        ($KEY_LEFT) {
             (( nextX -= 2 ))
         };;
     esac
@@ -27,14 +27,14 @@ translatePiece ()
 
     if (( $? == 0 )); then
         removePiece
-        [[ "$_direction" != "$DOWN" ]] && ghostEnabled && removeGhost
+        [[ "$_direction" != "$KEY_DOWN" ]] && ghostEnabled && removeGhost
 
         _pieceX=$nextX
         _pieceY=$nextY
 
-        [[ "$_direction" != "$DOWN" ]] && ghostEnabled && ghostPiece
+        [[ "$_direction" != "$KEY_DOWN" ]] && ghostEnabled && ghostPiece
         renderPiece
-    elif [[ "$_direction" == "$DOWN" ]]; then
+    elif [[ "$_direction" == "$KEY_DOWN" ]]; then
         lockPiece
         _newPiece=1
     fi

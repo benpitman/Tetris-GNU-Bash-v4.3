@@ -3,18 +3,25 @@ navigateMenu ()
     local -- key1
     local -- key2
     local -- key3
+    local -- loadText
     local -- menuIndex
     local -- optionText
     local -- selected=${2:-0}
 
     local -n -- menu="$1"
-    local -n -- menuOptions="${menu[OPTIONS]}"
 
     while true; do
+
         for (( menuIndex = 0; $menuIndex < (${menu[MAX]} + 1); menuIndex++ )); do
             (( $menuIndex == $selected )) && optionText="\e[7m" || optionText="\e[27m"
 
-            optionText+="${menu[PADDING]}${menuOptions[$menuIndex]}${menu[PADDING]}\e[27m"
+            if [[ "${menu[$menuIndex,LOAD]}" != "" ]]; then
+                ${menu[$menuIndex,LOAD]} "loadText"
+            else
+                loadText=${menu[$menuIndex,TEXT]}
+            fi
+
+            optionText+="${menu[PADDING]}$loadText${menu[PADDING]}\e[27m"
             navigateTo ${menu[$menuIndex,Y]} ${menu[$menuIndex,X]}
             renderText "$optionText"
         done
@@ -28,7 +35,12 @@ navigateMenu ()
         IFS= read -srn 1 -t 0.0001 key2
         IFS= read -srn 1 -t 0.0001 key3
 
-        [[ "$key1" == "" ]] && break
+        if [[ "$key1" =~ $KEY_SELECT ]]; then
+            if [[ "${menu[$selected,RUN]}" != "" ]]; then
+                ${menu[$selected,RUN]}
+            fi
+            break
+        fi
 
         if [[ "${menu[$selected,NOTE]}" != "" ]]; then
             navigateTo ${NOTE[Y]} $(( ${NOTE[X]} - (${#NOTE[CLEAR]} / 2) ))
@@ -36,13 +48,14 @@ navigateMenu ()
         fi
 
         case $key3 in
-            ($UP) {
+            ($KEY_UP) {
                 (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ))
             };;
-            ($DOWN) {
+            ($KEY_DOWN) {
                 (( $selected == ${menu[MAX]} ? selected = 0 : selected++ ))
             };;
         esac
+
     done
 
     return $selected
@@ -75,11 +88,11 @@ renderPartial ()
     done
 
     for (( partial = 0; $partial < (${partialOptions[MAX]} + 1); partial++ )); do
-        if [[ -n "${partialOptions[$partial]}" ]]; then
-            optionText=${partialOptions[$partial]}
+        if [[ "${partialOptions[$partial,LOAD]}" != "" ]]; then
+            ${partialOptions[$partial,LOAD]} "optionText"
+        else
+            optionText=${partialOptions[$partial,TEXT]}
         fi
-
-        [[ -n "${partialOptions[$partial,FUNCTION]}" ]] && "${partialOptions[$partial,FUNCTION]}" "optionText"
 
         half=$(( (${partialOptions[WIDTH]} - ${#optionText}) / 2 ))
         navigateTo ${partialOptions[$partial,Y]} $(( ${partialOptions[$partial,X]} + $half + 1 ))
@@ -93,23 +106,6 @@ renderMain ()
 
     navigateMenu 'MAIN_MENU' ${_selected[main]}
     _selected['main']=$?
-    case ${_selected[main]} in
-        (0) {
-            setState 'FIELD' # New game
-        };;
-        (1) {
-            setState 'SCORES' # Scores
-        };;
-        (2) {
-            setState 'SETTINGS' # Settings
-        };;
-        (2) {
-            setState 'CONSTANTS' # Constants
-        };;
-        (3) {
-            die
-        };;
-    esac
 }
 
 renderField ()
@@ -119,12 +115,12 @@ renderField ()
 
 renderScores ()
 {
-    local -- editableIndex
-    local -- editableRow
+    local -- editableIndex=${SCORES[MAX]}
+    local -- editableRow=$(( ${SCORES[Y]} + $editableIndex ))
     local -- line
     local -- newScore=0
     local -- playername
-    local -- score
+    local -- scoreIndex
     local -- scoreShown=0
 
     local -a -- scores
@@ -135,7 +131,7 @@ renderScores ()
 
     renderText "${SCORES_SCREEN[@]}"
 
-    if $LEGACY; then
+    if (( $LEGACY )); then
         IFS=$'\n' read -d "" -ra scores < "$HIGHSCORE_LOG"
     else
         readarray -t scores < "$HIGHSCORE_LOG"
@@ -166,18 +162,16 @@ renderScores ()
         )
     fi
 
-    for (( score = 0; $score < (${SCORES[MAX]} - 1); score++ )); do
-        scoreRow=$(( ${SCORES[Y]} + $score ))
-        if (( $newScore && $score == $editableIndex )); then
+    for (( scoreIndex = 0; $scoreIndex < (${SCORES[MAX]} - 1); scoreIndex++ )); do
+        scoreRow=$(( ${SCORES[Y]} + $scoreIndex ))
+        if (( $newScore && $scoreIndex == $editableIndex )); then
             editableRow=$scoreRow
         else
-            printScore $scoreRow ${SCORES[X]} $(( $score + 1 )) "${userNames[$score]}" ${userScores[$score]}
+            printScore $scoreRow ${SCORES[X]} $(( $scoreIndex + 1 )) "${userNames[$scoreIndex]}" ${userScores[$scoreIndex]}
         fi
     done
 
     if (( $newScore )); then
-        [[ "$editableRow" == "" ]] && (( editableRow = ${SCORES[Y]} + ${SCORES[MAX]} ))
-
         printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score 1
         textEntry $editableRow $(( ${SCORES[X]} + 4 )) 8 "playername"
 
@@ -192,7 +186,6 @@ renderScores ()
     fi
 
     navigateMenu 'SCORES_MENU'
-    setState 'MAIN'
 }
 
 printScore ()
@@ -303,12 +296,7 @@ renderSettings ()
             navigateMenu "SETTINGS_GAME_SUB_MENU"
             setGameMode $?
         };;
-        (2) {
-            setState "CONSTANTS"
-            _selected["constants"]=0
-        };;
         (3) {
-            setState "MAIN" # Return to main menu
             _selected["settings"]=0
         };;
     esac
@@ -320,20 +308,20 @@ renderConstants ()
 {
     renderText "${CONSTANTS_SCREEN[@]}"
 
+    renderPartial "CONSTANTS_SUB_MENU"
     navigateMenu "CONSTANTS_MENU" ${_selected[constants]}
     _selected["constants"]=$?
 
-    case ${_selected[constants]} in
-        (6) {
-            setState "SETTINGS"
-            _selected["constants"]=0
-        };;
-        (*) {
-            "${CONSTANTS_MENU[${_selected[constants]},RUN]}"
-        };;
-    esac
+    (( ${_selected[settings]} == 6 )) && _selected["settings"]=0
 
     saveSettings
+}
+
+renderAbout ()
+{
+    renderText "${ABOUT_SCREEN[@]}"
+
+    navigateMenu "ABOUT_MENU"
 }
 
 renderScreen ()
@@ -356,6 +344,9 @@ renderScreen ()
         };;
         (4) {
             renderConstants
+        };;
+        (5) {
+            renderAbout
         };;
     esac
 }

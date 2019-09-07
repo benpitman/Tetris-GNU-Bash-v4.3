@@ -12,7 +12,7 @@ alert ()
         while IFS= read -rsn1 key1; do
             IFS= read -rsn1 -t0.0001 key2
             if [[ "$key1" == $'\e' && "$key2" == "" ]] || \
-                    [[ "$key1" == $unstick ]] || \
+                    [[ "$key1" =~ $unstick ]] || \
                     [[ "$key1" == "" && "$key2" == "" ]]; then
                 alert "CLEAR"
                 break
@@ -40,7 +40,7 @@ pause ()
         renderText "${COLOURS[${PAUSE_SCREEN[$pauseIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
     done
 
-    alert "PAUSED" 1 "[Pp]"
+    alert "PAUSED" 1 "$KEY_PAUSE"
 
     refreshPlayingField
 }

@@ -12,15 +12,21 @@ declare -rg -- ERROR_LOG="$LOG_DIR/error.log"
 declare -rg -- DEBUG_LOG="$LOG_DIR/debug.log"
 declare -rg -- INPUT_LOG="$LOG_DIR/input.log"
 
-declare -rg -- UP="A"
-declare -rg -- DOWN="B"
-declare -rg -- RIGHT="C"
-declare -rg -- LEFT="D"
+declare -rg -- KEY_UP="A"
+declare -rg -- KEY_DOWN="B"
+declare -rg -- KEY_RIGHT="C"
+declare -rg -- KEY_LEFT="D"
+declare -rg -- KEY_SELECT="(^$| )"
+declare -rg -- KEY_PAUSE="[Pp]"
 
 declare -rg -- CEILING=2
 declare -rg -- FLOOR=23
 declare -rg -- RIGHT_WALL=20
 declare -rg -- LEFT_WALL=2
+
+declare -rg -- BLANK="\u0020\u0020"
+declare -rg -- GHOST="\u2592\u2592"
+declare -rg -- BLOCK="\u2588\u2588"
 
 declare -arg -- X_POSITIONS=({2..20..2})
 
@@ -62,7 +68,7 @@ loadScreens ()
             "│                                        │"
             "│                                        │"
             "│                                        │"
-            "│                                        │"
+            "│                           © Ben Pitman │"
             "└────────────────────────────────────────┘"
         )
         if holdEnabled; then
@@ -196,6 +202,32 @@ loadScreens ()
             "│                                        │"
             "│                                        │"
             "│                                        │"
+            "└────────────────────────────────────────┘"
+        )
+        declare -ag -- ABOUT_SCREEN=(
+            "┌────────────────────────────────────────┐"
+            "│             ┌───────────╖              │"
+            "├─────────────┤ A B O U T ╟──────────────┤"
+            "│             ╘═══════════╝              │"
+            "│                                        │"
+            "│    There's not much to say really.     │"
+            "│                                        │"
+            "│   Bash has always been my favourite    │"
+            "│   language since I was taught it in    │"
+            "│   college, and now any chance I get    │"
+            "│   to build a new program, no matter    │"
+            "│   how complex it may seem, I always    │"
+            "│   attempt it in Bash first. Most of    │"
+            "│   the time it takes months but that    │"
+            "│   does not bother me, and even with    │"
+            "│   all its flaws and eccentricities,    │"
+            "│   to me it will endlessly intrigue.    │"
+            "│                                        │"
+            "│   That is why I made Tetris in Bash    │"
+            "│                                        │"
+            "│                                     /\ │"
+            "│   Check out my GitHub at        o--'0 \`│"
+            "│   https://github.com/benpitman   \`--.  │"
             "└────────────────────────────────────────┘"
         )
     else
@@ -358,75 +390,124 @@ loadScreens ()
             "│                                        │"
             "└────────────────────────────────────────┘"
         )
+        declare -ag -- ABOUT_SCREEN=(
+            "┌────────────────────────────────────────┐"
+            "│             ┌───────────┐              │"
+            "├─────────────┤ A B O U T ├──────────────┤"
+            "│             └───────────┘              │"
+            "│                                        │"
+            "│    There's not much to say really.     │"
+            "│                                        │"
+            "│   Bash has always been my favourite    │"
+            "│   language since I was taught it in    │"
+            "│   college, and now any chance I get    │"
+            "│   to build a new program, no matter    │"
+            "│   how complex it may seem, I always    │"
+            "│   attempt it in Bash first. Most of    │"
+            "│   the time it takes months but that    │"
+            "│   does not bother me, and even with    │"
+            "│   all its flaws and eccentricities,    │"
+            "│   to me it will endlessly intrigue.    │"
+            "│                                        │"
+            "│   That is why I made Tetris in Bash    │"
+            "│                                        │"
+            "│                                     /\ │"
+            "│   Check out my GitHub at        o--'0 \`│"
+            "│   https://github.com/benpitman   \`--.  │"
+            "└────────────────────────────────────────┘"
+        )
     fi
 }
 
 ############################## States and Modes ################################
 
-
-declare -Arg STATES=(
+declare -Arg STATE=(
     ["MAIN"]=0
     ["FIELD"]=1
     ["SCORES"]=2
     ["SETTINGS"]=3
     ["CONSTANTS"]=4
-    ["GAME_OVER"]=5
+    ["ABOUT"]=5
+    ["GAME_OVER"]=6
 )
 
+declare -arg COLOUR_MODE=(
+    "NORMAL"
+    "SIMPLE"
+    "SHADOW"
+    "BLEACH"
+)
+
+declare -arg GAME_MODE=(
+    "NORMAL"
+    " HARD "
+)
 
 ############################### Menu Navigation ################################
 
-declare -rg -- START_POSITION="2,8"
-
-declare -arg -- MAIN_OPTIONS=(
-    "N E W   G A M E"
-    "S C O R E S"
-    "S E T T I N G S"
-    "Q U I T"
-)
+declare -rg -- START_Y=2
+declare -rg -- START_X=8
 
 declare -Arg -- MAIN_MENU=(
-    ["MAX"]=3
-    ["OPTIONS"]="MAIN_OPTIONS"
+    ["MAX"]=4
     ["PADDING"]=" "
 
     ["0,Y"]=11
     ["0,X"]=12
+    ["0,TEXT"]="N E W   G A M E"
+    ["0,RUN"]="setFieldState"
 
-    ["1,Y"]=14
+    ["1,Y"]=13
     ["1,X"]=14
+    ["1,TEXT"]="S C O R E S"
+    ["1,RUN"]="setScoresState"
 
-    ["2,Y"]=17
+    ["2,Y"]=15
     ["2,X"]=12
+    ["2,TEXT"]="S E T T I N G S"
+    ["2,RUN"]="setSettingsState"
 
-    ["3,Y"]=20
-    ["3,X"]=16
+    ["3,Y"]=17
+    ["3,X"]=15
+    ["3,TEXT"]="A B O U T"
+    ["3,RUN"]="setAboutState"
+
+    ["4,Y"]=19
+    ["4,X"]=16
+    ["4,TEXT"]="Q U I T"
+    ["4,RUN"]="die"
 )
 
-declare -arg -- SETTINGS_OPTIONS=(
-    "COLOUR MODE"
-    "GAME MODE"
-    "CONSTANTS"
-    "BACK"
+declare -Arg -- ABOUT_MENU=(
+    ["MAX"]=0
+
+    ["0,Y"]=0
+    ["0,X"]=0
+    ["0,RUN"]="setMainState"
 )
 
 # Settings menu options
 declare -Arg -- SETTINGS_MENU=(
     ["MAX"]=3
-    ["OPTIONS"]="SETTINGS_OPTIONS"
     ["PADDING"]=" "
 
     ["0,Y"]=10
     ["0,X"]=5
+    ["0,TEXT"]="COLOUR MODE"
 
     ["1,Y"]=12
-    ["1,X"]=6
+    ["1,X"]=5
+    ["1,TEXT"]="GAME MODE"
 
     ["2,Y"]=14
-    ["2,X"]=6
+    ["2,X"]=5
+    ["2,TEXT"]="CONSTANTS"
+    ["2,RUN"]="setConstantsState"
 
     ["3,Y"]=22
-    ["3,X"]=9
+    ["3,X"]=5
+    ["3,TEXT"]="BACK"
+    ["3,RUN"]="setMainState"
 )
 
 # Opens up the submenu for selection
@@ -454,17 +535,17 @@ declare -Arg -- SETTINGS_SUB_MENU=(
     ["MAX"]=2
     ["WIDTH"]=11
 
-    ["0,FUNCTION"]="getReadableColourMode"
     ["0,Y"]=10
     ["0,X"]=26
+    ["0,LOAD"]="getReadableColourMode"
 
-    ["1,FUNCTION"]="getReadableGameMode"
     ["1,Y"]=12
     ["1,X"]=26
+    ["1,LOAD"]="getReadableGameMode"
 
-    ["2"]="CUSTOMISE"
     ["2,Y"]=14
     ["2,X"]=25
+    ["2,TEXT"]="CUSTOMISE"
 
     ["CLEAR"]="              "
     ["CLEAR,Y"]=9
@@ -478,113 +559,136 @@ declare -Arg -- NOTE=(
     ["X"]=22
 )
 
-declare -arg -- CONSTANTS_OPTIONS=(
-    "SHOW NEXT"
-    "SHOW HOLD"
-    "GHOST"
-    "RECORD INPUTS"
-    "ROTATE ONCE"
-    "MEMORY GAME"
-    "BACK"
-)
-
-# Settings menu options
-declare -Arg -- CONSTANTS_MENU=(
-    ["MAX"]=6
-    ["OPTIONS"]="CONSTANTS_OPTIONS"
-    ["PADDING"]=" "
-
-    ["0,Y"]=9
-    ["0,X"]=5
-    ["0,RUN"]="toggleNext"
-    # ["0,"]
-
-    ["1,Y"]=10
-    ["1,X"]=5
-    ["1,RUN"]="toggleHold"
-
-    ["2,Y"]=11
-    ["2,X"]=5
-    ["2,NOTE"]="(Can cause flicker)"
-    ["2,RUN"]="toggleGhost"
-
-    ["3,Y"]=12
-    ["3,X"]=5
-    ["3,NOTE"]="All inputs logged for playback"
-    ["3,RUN"]="toggleLog"
-
-    ["4,Y"]=13
-    ["4,X"]=5
-    ["4,RUN"]="toggleRotate"
-
-    ["5,Y"]=14
-    ["5,X"]=5
-    ["5,RUN"]="toggleMemory"
-
-    ["6,Y"]=22
-    ["6,X"]=5
-)
-
-declare -arg -- COLOUR_MODES=(
-    "NORMAL"
-    "SIMPLE"
-    "SHADOW"
-    "BLEACH"
-)
-
 # Settings colour mode submenu options
 declare -Arg -- SETTINGS_COLOUR_SUB_MENU=(
     ["MAX"]=3
-    ["OPTIONS"]="COLOUR_MODES"
     ["PADDING"]="  "
 
     ["0,Y"]=10
     ["0,X"]=27
+    ["0,TEXT"]="NORMAL"
     ["0,NOTE"]="Original Tetris colours"
+    ["0,RUN"]="setNormalColourMode"
 
     ["1,Y"]=12
     ["1,X"]=27
+    ["1,TEXT"]="SIMPLE"
     ["1,NOTE"]="Reduced colours for lower colour depth"
+    ["1,RUN"]="setSimpleColourMode"
 
     ["2,Y"]=14
     ["2,X"]=27
+    ["2,TEXT"]="SHADOW"
     ["2,NOTE"]="White on black"
+    ["2,RUN"]="setShadowColourMode"
 
     ["3,Y"]=16
     ["3,X"]=27
+    ["3,TEXT"]="BLEACH"
     ["3,NOTE"]="Black on white"
-)
-
-declare -arg -- GAME_MODES=(
-    "NORMAL"
-    " HARD "
+    ["3,RUN"]="setBleachColourMode"
 )
 
 declare -Arg -- SETTINGS_GAME_SUB_MENU=(
     ["MAX"]=0
-    ["OPTIONS"]="GAME_MODES"
     ["PADDING"]="  "
 
     ["0,Y"]=11
     ["0,X"]=27
     ["0,NOTE"]="It's just Tetris"
+    ["0,TEXT"]="NORMAL"
 
     ["1,Y"]=13
     ["1,X"]=27
+    ["1,TEXT"]=" HARD "
     # Dunno yet
 )
 
-declare -arg SCORES_OPTIONS=(
-    "BACK"
+# Settings menu options
+declare -Arg -- CONSTANTS_MENU=(
+    ["MAX"]=6
+    ["PADDING"]=" "
+
+    ["0,Y"]=9
+    ["0,X"]=5
+    ["0,TEXT"]="SHOW NEXT"
+    ["0,RUN"]="toggleNext"
+
+    ["1,Y"]=10
+    ["1,X"]=5
+    ["1,TEXT"]="SHOW HOLD"
+    ["1,RUN"]="toggleHold"
+
+    ["2,Y"]=11
+    ["2,X"]=5
+    ["2,NOTE"]="(Can cause flicker)"
+    ["2,TEXT"]="GHOST"
+    ["2,RUN"]="toggleGhost"
+
+    ["3,Y"]=12
+    ["3,X"]=5
+    ["3,NOTE"]="All inputs logged for playback"
+    ["3,TEXT"]="RECORD INPUTS"
+    ["3,RUN"]="toggleRecord"
+
+    ["4,Y"]=13
+    ["4,X"]=5
+    ["4,TEXT"]="ROTATE ONCE"
+    ["4,RUN"]="toggleRotate"
+
+    ["5,Y"]=14
+    ["5,X"]=5
+    ["5,TEXT"]="MEMORY GAME"
+    ["5,RUN"]="toggleMemory"
+
+    ["6,Y"]=22
+    ["6,X"]=5
+    ["6,TEXT"]="BACK"
+    ["6,RUN"]="setSettingsState"
+)
+
+declare -Arg -- CONSTANTS_SUB_MENU=(
+    ["MAX"]=5
+    ["WIDTH"]=11
+
+    ["0,Y"]=9
+    ["0,X"]=26
+    ["0,LOAD"]="getReadableNext"
+
+    ["1,Y"]=10
+    ["1,X"]=26
+    ["1,LOAD"]="getReadableHold"
+
+    ["2,Y"]=11
+    ["2,X"]=26
+    ["2,LOAD"]="getReadableGhost"
+
+    ["3,Y"]=12
+    ["3,X"]=26
+    ["3,LOAD"]="getReadableRecord"
+
+    ["4,Y"]=13
+    ["4,X"]=26
+    ["4,LOAD"]="getReadableRotate"
+
+    ["5,Y"]=14
+    ["5,X"]=26
+    ["5,LOAD"]="getReadableMemory"
+
+    ["CLEAR"]="              "
+    ["CLEAR,Y"]=9
+    ["CLEAR,X"]=25
+    ["CLEAR,MAX"]=11
 )
 
 declare -Arg -- SCORES_MENU=(
     ["MAX"]=0
-    ["OPTIONS"]="SCORES_OPTIONS"
     ["PADDING"]=" "
 
     ["0,Y"]=22
     ["0,X"]=18
+    ["0,TEXT"]="BACK"
+    ["0,RUN"]="setMainState"
 )
 
 declare -Arg -- SCORES=(
@@ -608,122 +712,56 @@ declare -Arg -- FIELD_OPTIONS=(
     ["LINES,Y"]=15
     ["LINES,WIDTH"]=9
 
+    ["ALERT,Y"]=8
+    ["ALERT,X"]=27
     ["ALERT,PAUSED"]="P A U S E D"
     ["ALERT,SINGLE"]="S I N G L E"
     ["ALERT,DOUBLE"]="D O U B L E"
     ["ALERT,TRIPLE"]="T R I P L E"
     ["ALERT,TETRIS"]="T E T R I S"
-    ["ALERT,GAME_OVER"]="GAME   OVER"
+    ["ALERT,GAME_OVER"]=" GAME OVER "
     ["ALERT,END_REPLAY"]="END  REPLAY"
     ["ALERT,CLEAR"]="           "
-    ["ALERT,X"]=27
-    ["ALERT,Y"]=8
 
     ["PERFECT,MAX"]=1
-    ["PERFECT,0"]="P E R F E C T"
-    ["PERFECT,0,CLEAR"]="              "
     ["PERFECT,0,Y"]=11
     ["PERFECT,0,X"]=5
+    ["PERFECT,0,TEXT"]="P E R F E C T"
+    ["PERFECT,0,CLEAR"]="              "
 
-    ["PERFECT,1"]="C L E A R"
-    ["PERFECT,1,CLEAR"]="         "
     ["PERFECT,1,Y"]=13
     ["PERFECT,1,X"]=7
+    ["PERFECT,1,TEXT"]="C L E A R"
+    ["PERFECT,1,CLEAR"]="         "
 )
 
 declare -Arg -- NEXT_PIECE=(
-    ["R,X"]=26  # Reset
     ["R,Y"]=19
+    ["R,X"]=26  # Reset
 
-    ["I,X"]=27
     ["I,Y"]=19
+    ["I,X"]=27
 
-    ["J,X"]=28
     ["J,Y"]=20
+    ["J,X"]=28
 
-    ["L,X"]=28
     ["L,Y"]=20
+    ["L,X"]=28
 
-    ["O,X"]=29
     ["O,Y"]=20
+    ["O,X"]=29
 
-    ["S,X"]=28
     ["S,Y"]=20
+    ["S,X"]=28
 
-    ["T,X"]=28
     ["T,Y"]=20
+    ["T,X"]=28
 
-    ["Z,X"]=28
     ["Z,Y"]=20
+    ["Z,X"]=28
 )
 
 ################################ Tetrominoes ###################################
-
-declare -rg -- BLANK="\u0020\u0020"
-declare -rg -- GHOST="\u2592\u2592"
-declare -rg -- BLOCK="\u2588\u2588"
-
-setColours()
-{
-    local -- colourMode
-
-    getReadableColourMode "colourMode"
-
-    case $colourMode in
-        "NORMAL")
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0m'        # Default
-                [1]=$'\e[38;5;43m'  # Cyan
-                [2]=$'\e[38;5;27m'  # Blue
-                [3]=$'\e[38;5;166m' # Orange
-                [4]=$'\e[38;5;178m' # Yellow
-                [5]=$'\e[38;5;76m'  # Green
-                [6]=$'\e[38;5;128m' # Purple
-                [7]=$'\e[38;5;160m' # Red
-                [8]=$'\e[0;97m'     # White
-            )
-        ;;
-        "SIMPLE")
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0m'        # Default
-                [1]=$'\e[38;5;27m'  # Blue
-                [2]=$'\e[38;5;128m' # Purple
-                [3]=$'\e[38;5;178m' # Yellow
-                [4]=$'\e[38;5;76m'  # Green
-                [5]=$'\e[38;5;43m'  # Cyan
-                [6]=$'\e[38;5;205m' # Pink
-                [7]=$'\e[38;5;160m' # Red
-                [8]=$'\e[0;97m'     # White
-            )
-        ;;
-        "SHADOW")
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0;97m'   # white
-                [1]=$'\e[0;97m'
-                [2]=$'\e[0;97m'
-                [3]=$'\e[0;97m'
-                [4]=$'\e[0;97m'
-                [5]=$'\e[0;97m'
-                [6]=$'\e[0;97m'
-                [7]=$'\e[0;97m'
-                [8]=$'\e[0;97m'
-            )
-        ;;
-        "BLEACH")
-            declare -ag -- COLOURS=(
-                [0]=$'\e[38;5;232;47m'   # Inverted white
-                [1]=$'\e[38;5;232;47m'
-                [2]=$'\e[38;5;232;47m'
-                [3]=$'\e[38;5;232;47m'
-                [4]=$'\e[38;5;232;47m'
-                [5]=$'\e[38;5;232;47m'
-                [6]=$'\e[38;5;232;47m'
-                [7]=$'\e[38;5;232;47m'
-                [8]=$'\e[38;5;232;47m'
-            )
-        ;;
-    esac
-}
 
 declare -Arg -- COLOURS_LOOKUP=(
     [R]=0   # Reset
