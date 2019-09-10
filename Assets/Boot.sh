@@ -15,6 +15,9 @@ boot ()
     loadScreens
     [[ -s "$HIGHSCORE_LOG" ]] || >"$HIGHSCORE_LOG" # Create score log if doesn"t exist
 
+    stty -echo  # Disable echo
+    tput civis  # Disable cursor blinker
+
     exec 2>"$ERROR_LOG"
     exec 5>"$DEBUG_LOG"
 

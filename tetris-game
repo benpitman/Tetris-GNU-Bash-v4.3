@@ -23,11 +23,11 @@ fi
 die ()
 {
     tput cvvis
-    printf "\e[0m\e[23;1H\n\n"
+    printf "\e[0m\e[24;1H\n"
     stty sane
     exit 0
 }
-trap die INT EXIT
+trap die INT
 
 declare -arg -- AUTOLOAD=(
     "Core/Globals"
@@ -50,15 +50,10 @@ for import in "${AUTOLOAD[@]}"; do
 done
 unset import
 
-
 if [[ -n "$2" && -s "$2" ]]; then
-    _replay=1
-    _replayInputs=( $( fold -b1 "$2" ) )
-    _state=1
+    setReplayMode "$2"
+    setFieldState
 fi
-
-stty -echo  # Disable echo
-tput civis  # Disable cursor blinker
 
 boot
 
@@ -124,7 +119,7 @@ replayGameLoop ()
             (( $? )) && continue
 
             renderPiece
-            ghostEnabled && ghostPiece
+            set -x
             clearBuffer
         elif (( $updatePosition )); then
             translatePiece

@@ -31,7 +31,7 @@ declare -Ag -- _gameBooleans=(
     ["hold"]=1
     ["next"]=0
     ["ghost"]=0
-    ["log"]=0
+    ["record"]=0
     ["memory"]=1
     ["rotate"]=1
 )

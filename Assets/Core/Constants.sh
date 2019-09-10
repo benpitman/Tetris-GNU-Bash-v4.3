@@ -763,16 +763,18 @@ declare -Arg -- NEXT_PIECE=(
 
 ################################ Tetrominoes ###################################
 
-declare -Arg -- COLOURS_LOOKUP=(
-    [R]=0   # Reset
-    [I]=1
-    [J]=2
-    [L]=3
-    [O]=4
-    [S]=5
-    [T]=6
-    [Z]=7
-    [W]=8   # White
+declare -arg -- COLOURS=(
+     [0]=$'\e[0m'           # Default
+     [1]=$'\e[38;5;27m'     # Blue
+     [2]=$'\e[38;5;43m'     # Cyan
+     [3]=$'\e[38;5;76m'     # Green
+     [4]=$'\e[38;5;128m'    # Purple
+     [5]=$'\e[38;5;178m'    # Yellow
+     [6]=$'\e[38;5;160m'    # Red
+     [7]=$'\e[38;5;166m'    # Orange
+     [8]=$'\e[38;5;205m'    # Pink
+     [9]=$'\e[0;97m'        # White
+    [10]=$'\e[38;5;232;47m' # Inverted white
 )
 
 declare -arg -- PIECES=( "I" "J" "L" "O" "S" "T" "Z" )

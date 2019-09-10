@@ -42,6 +42,21 @@ setGameMode ()
     _gameMode=$1
 }
 
+setReplayMode ()
+{
+    _replay=1
+    _replayInputs=( $( fold -b1 "$1" ) )
+
+    _gameBooleans=(
+        ["hold"]=1
+        ["next"]=1
+        ["ghost"]=1
+        ["record"]=1
+        ["memory"]=1
+        ["rotate"]=1
+    )
+}
+
 ################################### TOGGLES ####################################
 
 toggleNext ()
@@ -60,7 +75,7 @@ toggleGhost ()
     toggleBoolean "ghost"
 }
 
-toggleRecord()
+toggleRecord ()
 {
     toggleBoolean "record"
 }
@@ -108,59 +123,59 @@ setColourMode ()
     _colourMode=$1
 }
 
-setColours()
+setColours ()
 {
     case $_colourMode in
         (0) {
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0m'        # Default
-                [1]=$'\e[38;5;43m'  # Cyan
-                [2]=$'\e[38;5;27m'  # Blue
-                [3]=$'\e[38;5;166m' # Orange
-                [4]=$'\e[38;5;178m' # Yellow
-                [5]=$'\e[38;5;76m'  # Green
-                [6]=$'\e[38;5;128m' # Purple
-                [7]=$'\e[38;5;160m' # Red
-                [8]=$'\e[0;97m'     # White
+            declare -Ag -- COLOURS_LOOKUP=(
+                [R]=0 # Reset
+                [I]=2
+                [J]=1
+                [L]=7
+                [O]=5
+                [S]=3
+                [T]=4
+                [Z]=6
+                [W]=9 # White
             )
         };;
         (1) {
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0m'        # Default
-                [1]=$'\e[38;5;27m'  # Blue
-                [2]=$'\e[38;5;128m' # Purple
-                [3]=$'\e[38;5;178m' # Yellow
-                [4]=$'\e[38;5;76m'  # Green
-                [5]=$'\e[38;5;43m'  # Cyan
-                [6]=$'\e[38;5;205m' # Pink
-                [7]=$'\e[38;5;160m' # Red
-                [8]=$'\e[0;97m'     # White
+            declare -Ag -- COLOURS_LOOKUP=(
+                [R]=0 # Reset
+                [I]=1
+                [J]=4
+                [L]=5
+                [O]=3
+                [S]=2
+                [T]=8
+                [Z]=7
+                [W]=9 # White
             )
         };;
         (2) {
-            declare -ag -- COLOURS=(
-                [0]=$'\e[0;97m'   # white
-                [1]=$'\e[0;97m'
-                [2]=$'\e[0;97m'
-                [3]=$'\e[0;97m'
-                [4]=$'\e[0;97m'
-                [5]=$'\e[0;97m'
-                [6]=$'\e[0;97m'
-                [7]=$'\e[0;97m'
-                [8]=$'\e[0;97m'
+            declare -Ag -- COLOURS_LOOKUP=(
+                [R]=0 # Reset
+                [I]=9
+                [J]=9
+                [L]=9
+                [O]=9
+                [S]=9
+                [T]=9
+                [Z]=9
+                [W]=9 # White
             )
         };;
         (3) {
-            declare -ag -- COLOURS=(
-                [0]=$'\e[38;5;232;47m'   # Inverted white
-                [1]=$'\e[38;5;232;47m'
-                [2]=$'\e[38;5;232;47m'
-                [3]=$'\e[38;5;232;47m'
-                [4]=$'\e[38;5;232;47m'
-                [5]=$'\e[38;5;232;47m'
-                [6]=$'\e[38;5;232;47m'
-                [7]=$'\e[38;5;232;47m'
-                [8]=$'\e[38;5;232;47m'
+            declare -Ag -- COLOURS_LOOKUP=(
+                [R]=0 # Reset
+                [I]=10
+                [J]=10
+                [L]=10
+                [O]=10
+                [S]=10
+                [T]=10
+                [Z]=10
+                [W]=10 # White
             )
         };;
     esac
