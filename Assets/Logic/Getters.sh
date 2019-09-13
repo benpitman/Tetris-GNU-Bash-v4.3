@@ -42,34 +42,44 @@ getReadableMemory ()
     printf -v $1 "%s" "DISABLED"
 }
 
+getReadableUI ()
+{
+    unicodeEnabled && printf -v $1 "%s" "NORMAL" || printf -v $1 "%s" "SIMPLE"
+}
+
 ################################## PSEUDO ######################################
 
 holdEnabled ()
 {
-    return ${_gameBooleans[hold]}
+    (( ${_gameBooleans[hold]} ))
 }
 
 nextEnabled ()
 {
-    return ${_gameBooleans[next]}
+    (( ${_gameBooleans[next]} ))
 }
 
 ghostEnabled ()
 {
-    return ${_gameBooleans[ghost]}
+    (( ${_gameBooleans[ghost]} ))
 }
 
 recordEnabled ()
 {
-    return ${_gameBooleans[record]}
+    (( ${_gameBooleans[record]} ))
 }
 
 rotateEnabled ()
 {
-    return ${_gameBooleans[rotate]}
+    (( ${_gameBooleans[rotate]} ))
 }
 
 memoryEnabled ()
 {
-    return ${_gameBooleans[memory]}
+    (( ${_gameBooleans[memory]} ))
+}
+
+unicodeEnabled ()
+{
+    (( ${_gameBooleans[unicode]} ))
 }

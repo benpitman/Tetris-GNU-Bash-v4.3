@@ -27,7 +27,7 @@ die ()
     stty sane
     exit 0
 }
-trap die INT
+trap die INT EXIT
 
 declare -arg -- AUTOLOAD=(
     "Core/Globals"

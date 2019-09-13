@@ -4,15 +4,13 @@ boot ()
 {
     # If game is loaded on a terminal outside of a GUI environment
     if [[ "$DISPLAY" == "" || "$TERM" == "linux" ]]; then
-        _inTTY=1
         setSimpleColourMode
     else
-        _inTTY=0
         setNormalColourMode
     fi
 
     setColours
-    loadScreens
+
     [[ -s "$HIGHSCORE_LOG" ]] || >"$HIGHSCORE_LOG" # Create score log if doesn"t exist
 
     stty -echo  # Disable echo
@@ -25,4 +23,9 @@ boot ()
         # Debug mode sends STDERR to an error file
         set -xT
     fi
+}
+
+loadScreens ()
+{
+    unicodeEnabled && setNormalUI || setSimpleUI
 }

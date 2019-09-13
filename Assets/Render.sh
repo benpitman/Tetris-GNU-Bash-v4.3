@@ -164,7 +164,7 @@ destroyLines ()
         for yPos in ${lineIndexes[@]}; do
             navigateTo $yPos $xPos
             renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLANK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
-            _lock[$yPos,$xPos]=0
+            _lock[$yPos,$xPos]=${COLOURS_LOOKUP[R]}
         done
         sleep 0.02
     done
@@ -185,7 +185,7 @@ destroyLines ()
                 renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLANK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
                 navigateTo $(( $yPlus + $offset )) $xPlus
                 renderText "${COLOURS[$colour]}${BLOCK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
-                _lock[$yPlus,$xPlus]=0
+                _lock[$yPlus,$xPlus]=${COLOURS_LOOKUP[R]}
             else
                 (( zeroes++ ))
             fi
@@ -214,7 +214,7 @@ checkLines ()
 
         for xPos in ${X_POSITIONS[@]}; do
             # If any block on a line does not have colour, skip this line
-            if (( ${_lock[$yPos,$xPos]} == 0 )); then
+            if (( ${_lock[$yPos,$xPos]} == ${COLOURS_LOOKUP[R]} )); then
                 lineIsFull=0
                 break
             fi
@@ -232,7 +232,7 @@ checkLines ()
         if (( $perfectYCheck >= $CEILING )); then
             for xPos in ${X_POSITIONS[@]}; do
                 # If any block on this line has colour, a clear was not made
-                if (( ${_lock[$perfectYCheck,$xPos]} )); then
+                if (( ${_lock[$perfectYCheck,$xPos]} != ${COLOURS_LOOKUP[R]} )); then
                     perfect=0
                     break
                 fi
@@ -270,10 +270,10 @@ refreshPlayingField ()
 
     for lockIndex in ${!_lock[@]}; do
         navigateTo ${lockIndex%,*} ${lockIndex#*,}
-        if (( ${_lock[$lockIndex]} )); then
-            renderText "${COLOURS[${_lock[$lockIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
-        else
+        if (( ${_lock[$lockIndex]} == ${COLOURS_LOOKUP[R]} )); then
             renderText "$BLANK"
+        else
+            renderText "${COLOURS[${_lock[$lockIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
         fi
     done
 
@@ -296,7 +296,7 @@ canRender ()
         (( yAx = $yPos + ${coord#*,} ))
 
         # Needs to check tetromino collision first for rotation
-        if (( ${_lock[$yAx,$xAx]} )); then
+        if (( ${_lock[$yAx,$xAx]} != ${COLOURS_LOOKUP[R]} )); then
             return 4
         elif (( $xAx > $RIGHT_WALL )); then
             return 1
