@@ -68,9 +68,7 @@ loadCollision ()
 
     for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
         for (( xPos = $LEFT_WALL; xPos <= $RIGHT_WALL; xPos += 2 )); do
-            _lock[$yPos,$xPos]=0
-            _lock[$yPos,$xPos,ID]=
-            _lock[$yPos,$xPos,COLOUR]=
+            setCollision $yPos $xPos 0 0 ${COLOURS_LOOKUP[R]}
         done
     done
 }
@@ -80,9 +78,9 @@ setCollision ()
     local -- yPos=$1
     local -- xPos=$2
 
-    _lock[$yPos,$xPos]=0
-    _lock[$yPos,$xPos,ID]=
-    _lock[$yPos,$xPos,COLOUR]=
+    _lock[$yPos,$xPos]=$3
+    _lock[$yPos,$xPos,ID]=$4
+    _lock[$yPos,$xPos,COLOUR]=$5
 }
 
 ################################### TOGGLES ####################################

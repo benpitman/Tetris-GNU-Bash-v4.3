@@ -29,29 +29,13 @@ alert ()
     fi
 }
 
-pause ()
-{
-    local -- pauseIndex
-
-    buildPauseScreen
-
-    for pauseIndex in ${!PAUSE_SCREEN[@]}; do
-        navigateTo ${pauseIndex%,*} ${pauseIndex#*,}
-        renderText "${COLOURS[${PAUSE_SCREEN[$pauseIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
-    done
-
-    alert "PAUSED" 1 "$KEY_PAUSE"
-
-    refreshPlayingField
-}
-
 renderPerfectClear ()
 {
     local -- perfectIndex=0
 
     while (( $perfectIndex <= ${FIELD_OPTIONS[PERFECT,MAX]} )); do
         navigateTo ${FIELD_OPTIONS[PERFECT,$perfectIndex,Y]} ${FIELD_OPTIONS[PERFECT,$perfectIndex,X]}
-        renderText "${FIELD_OPTIONS[PERFECT,$perfectIndex]}"
+        renderText "${FIELD_OPTIONS[PERFECT,$perfectIndex,TEXT]}"
 
         (( perfectIndex++ ))
     done
@@ -69,42 +53,31 @@ renderPerfectClear ()
 
 levelUp ()
 {
-    local -- paddedText
-
     (( _level++ ))
     navigateTo ${FIELD_OPTIONS[LEVEL,Y]} ${FIELD_OPTIONS[LEVEL,X]}
-    printf -v paddedText "%${FIELD_OPTIONS[LEVEL,WIDTH]}s" $_level
-    renderText "$paddedText"
+    renderPaddedText "$_level" ${FIELD_OPTIONS[LEVEL,WIDTH]}
 }
 
 scoreUp ()
 {
     local -- modifier
     local -- numLines=$1
-    local -- paddedText
     local -- perfect=${2:-0}
 
-    case $1 in
-        1)  modifier=40;;
-        2)  modifier=100;;
-        3)  modifier=300;;
-        4)  modifier=1200;;
-    esac
+    modifier=${SCORE_MODIFIERS[$numLines]}
 
     (( modifier *= ($_level + 1) ))
     (( $perfect && (modifier *= 2) ))
     (( _score += $modifier ))
 
     navigateTo ${FIELD_OPTIONS[SCORE,Y]} ${FIELD_OPTIONS[SCORE,X]}
-    printf -v paddedText "%${FIELD_OPTIONS[SCORE,WIDTH]}s" $_score
-    renderText "$paddedText"
+    renderPaddedText "$_score" ${FIELD_OPTIONS[SCORE,WIDTH]}
 }
 
 lineUp ()
 {
     local -- lineIndex=0
     local -- numLines=$1
-    local -- paddedText
     local -- perfect=${2:-0}
 
     scoreUp $numLines $perfect
@@ -128,8 +101,7 @@ lineUp ()
     esac
 
     navigateTo ${FIELD_OPTIONS[LINES,Y]} ${FIELD_OPTIONS[LINES,X]}
-    printf -v paddedText "%${FIELD_OPTIONS[LINES,WIDTH]}s" $_lines
-    renderText "$paddedText"
+    renderPaddedText "$_lines" ${FIELD_OPTIONS[LINES,WIDTH]}
 
     (( $perfect )) && renderPerfectClear
 }
@@ -152,7 +124,7 @@ destroyLines ()
         for xPos in ${X_POSITIONS[@]}; do
             for yPos in $*; do
                 navigateTo $yPos $xPos
-                renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLOCK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+                renderBlockTile ${COLOURS_LOOKUP[W]}
             done
             sleep 0.02
         done
@@ -163,7 +135,7 @@ destroyLines ()
     for xPos in ${X_POSITIONS[@]}; do
         for yPos in ${lineIndexes[@]}; do
             navigateTo $yPos $xPos
-            renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLANK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+            renderBlankTile
             _lock[$yPos,$xPos]=${COLOURS_LOOKUP[R]}
         done
         sleep 0.02
@@ -182,9 +154,9 @@ destroyLines ()
 
             if (( $colour )); then
                 navigateTo $yPlus $xPlus
-                renderText "${COLOURS[${COLOURS_LOOKUP[W]}]}${BLANK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+                renderBlankTile
                 navigateTo $(( $yPlus + $offset )) $xPlus
-                renderText "${COLOURS[$colour]}${BLOCK}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+                renderBlockTile $colour
                 _lock[$yPlus,$xPlus]=${COLOURS_LOOKUP[R]}
             else
                 (( zeroes++ ))
@@ -214,7 +186,7 @@ checkLines ()
 
         for xPos in ${X_POSITIONS[@]}; do
             # If any block on a line does not have colour, skip this line
-            if (( ${_lock[$yPos,$xPos]} == ${COLOURS_LOOKUP[R]} )); then
+            if ! hasCollision $yPos $xPos; then
                 lineIsFull=0
                 break
             fi
@@ -232,7 +204,7 @@ checkLines ()
         if (( $perfectYCheck >= $CEILING )); then
             for xPos in ${X_POSITIONS[@]}; do
                 # If any block on this line has colour, a clear was not made
-                if (( ${_lock[$perfectYCheck,$xPos]} != ${COLOURS_LOOKUP[R]} )); then
+                if hasCollision $perfectYCheck $xPos; then
                     perfect=0
                     break
                 fi
@@ -244,41 +216,6 @@ checkLines ()
         destroyLines ${!toDestroy[@]}
         lineUp ${#toDestroy[@]} $perfect
     fi
-}
-
-lockPiece ()
-{
-    local -- coord
-    local -- pieceKey=$_currentPiece
-    local -- xPos=$_pieceX
-    local -- yPos=$_pieceY
-
-    local -a -- toCheck=()
-    local -n -- piece="$pieceKey"
-
-    for coord in ${piece[$_rotation]}; do
-        toCheck[(( $yPos + ${coord#*,} ))]= # Save as keys to avoid duplicates
-        _lock[$(( $yPos + ${coord#*,} )),$(( $xPos + (${coord%,*} * 2) ))]=${COLOURS_LOOKUP[$pieceKey]}
-    done
-
-    checkLines ${!toCheck[@]}
-}
-
-refreshPlayingField ()
-{
-    local -- lockIndex
-
-    for lockIndex in ${!_lock[@]}; do
-        navigateTo ${lockIndex%,*} ${lockIndex#*,}
-        if (( ${_lock[$lockIndex]} == ${COLOURS_LOOKUP[R]} )); then
-            renderText "$BLANK"
-        else
-            renderText "${COLOURS[${_lock[$lockIndex]}]}$BLOCK${COLOURS[${COLOURS_LOOKUP[W]}]}"
-        fi
-    done
-
-    renderGhost
-    renderPiece
 }
 
 canRender ()
@@ -319,38 +256,36 @@ renderObject ()
 
     local -n -- piece="$pieceKey"
 
-    tile="${COLOURS[${COLOURS_LOOKUP[$pieceKey]}]}${!tileType}${COLOURS[${COLOURS_LOOKUP[R]}]}"
-
     for coord in ${piece[$_rotation]}; do
         navigateTo $(( $yPos + ${coord#*,} )) $(( $xPos + (${coord%,*} * 2) ))
-        renderText "$tile"
+        renderTile $tileType ${COLOURS_LOOKUP[$pieceKey]}
     done
 }
 
 renderGhost ()
 {
-    renderObject "$_currentPiece" $_ghostY $_pieceX 'GHOST'
+    renderObject "$_currentPiece" $_ghostY $_pieceX 1
 }
 
 removeGhost ()
 {
-    renderObject "$_currentPiece" $_ghostY $_pieceX 'BLANK'
+    renderObject "$_currentPiece" $_ghostY $_pieceX 2
 }
 
 renderPiece ()
 {
-    renderObject "$_currentPiece" $_pieceY $_pieceX 'BLOCK'
+    renderObject "$_currentPiece" $_pieceY $_pieceX 0
 }
 
 removePiece ()
 {
-    renderObject "$_currentPiece" $_pieceY $_pieceX 'BLANK'
+    renderObject "$_currentPiece" $_pieceY $_pieceX 2
 }
 
 renderNextPiece ()
 {
-    renderObject "$_currentPiece" ${NEXT_PIECE[$_currentPiece,Y]} ${NEXT_PIECE[$_currentPiece,X]} 'BLANK'
-    renderObject "$_nextPiece" ${NEXT_PIECE[$_nextPiece,Y]} ${NEXT_PIECE[$_nextPiece,X]} 'BLOCK'
+    renderObject "$_currentPiece" ${NEXT_PIECE[$_currentPiece,Y]} ${NEXT_PIECE[$_currentPiece,X]} 2
+    renderObject "$_nextPiece" ${NEXT_PIECE[$_nextPiece,Y]} ${NEXT_PIECE[$_nextPiece,X]} 0
 }
 
 navigateTo ()
@@ -362,4 +297,42 @@ renderText ()
 {
     (( $# > 1 )) && printf "${COLOURS[${COLOURS_LOOKUP[R]}]}%b\e[0m\n" "${@:1:$#-1}"
     printf "${COLOURS[${COLOURS_LOOKUP[R]}]}%b\e[0m" "${@: -1}"
+}
+
+renderPaddedText ()
+{
+    local -- paddedText=
+    local -- padWidth=$2
+    local -- text="$1"
+
+    printf -v paddedText "%${padWidth}s" "$text"
+    renderText "$paddedText"
+}
+
+renderTile ()
+{
+    local -- tile
+
+    case $1 in
+        (0) tile=$BLOCK;;
+        (1) tile=$GHOST;;
+        (2) tile=$BLANK;;
+    esac
+
+    renderText "${COLOURS[$2]}${tile}${COLOURS[${COLOURS_LOOKUP[R]}]}"
+}
+
+renderBlockTile ()
+{
+    renderTile 0 $1
+}
+
+renderGhostTile ()
+{
+    renderTile 1 $1
+}
+
+renderBlankTile ()
+{
+    renderTile 2 ${COLOURS_LOOKUP[W]}
 }

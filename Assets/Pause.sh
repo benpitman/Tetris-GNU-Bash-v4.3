@@ -1,3 +1,38 @@
+pause ()
+{
+    local -- pauseIndex
+
+    buildPauseScreen
+
+    for pauseIndex in ${!PAUSE_SCREEN[@]}; do
+        navigateTo ${pauseIndex%,*} ${pauseIndex#*,}
+        renderBlockTile ${PAUSE_SCREEN[$pauseIndex]}
+    done
+
+    alert "PAUSED" 1 "$KEY_PAUSE"
+
+    refreshPlayingField
+}
+
+refreshPlayingField ()
+{
+    local -- yPos=
+    local -- xPos=
+
+    for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
+        navigateTo $yPos $xPos
+
+        for (( xPos = $LEFT_WALL; xPos <= $RIGHT_WALL; xPos += 2 )); do
+            if hasCollision $yPos $xPos; then
+                getLockColourID
+                renderBlockTile $?
+            else
+                renderBlankTile
+            fi
+        done
+    done
+}
+
 buildPauseScreen ()
 {
     case $(( $RANDOM % 80 )) in

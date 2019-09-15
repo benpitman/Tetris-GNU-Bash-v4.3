@@ -411,6 +411,13 @@ declare -arg -- COLOURS=(
     [10]=$'\e[38;5;232;47m' # Inverted white
 )
 
+declare -arg -- SCORE_MODIFIERS=(
+    [1]=40
+    [2]=100
+    [3]=300
+    [4]=1200
+)
+
 declare -arg -- PIECES=( "I" "J" "L" "O" "S" "T" "Z" )
 
 declare -arg -- I=(

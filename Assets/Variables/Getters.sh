@@ -49,7 +49,7 @@ getReadableUI ()
 
 ################################# COLLISION ####################################
 
-getCollision ()
+hasCollision ()
 {
     (( ${_lock[$1,$2]} ))
 }
