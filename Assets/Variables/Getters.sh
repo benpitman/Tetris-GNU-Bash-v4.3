@@ -47,6 +47,18 @@ getReadableUI ()
     unicodeEnabled && printf -v $1 "%s" "NORMAL" || printf -v $1 "%s" "SIMPLE"
 }
 
+################################# COLLISION ####################################
+
+getCollision ()
+{
+    (( ${_lock[$1,$2]} ))
+}
+
+getNextLockID ()
+{
+    return $(( ++_lockID ))
+}
+
 ################################## PSEUDO ######################################
 
 holdEnabled ()
@@ -82,4 +94,16 @@ memoryEnabled ()
 unicodeEnabled ()
 {
     (( ${_gameBooleans[unicode]} ))
+}
+
+################################## IS SETS #####################################
+
+debuggingIsSet ()
+{
+    (( $_debug ))
+}
+
+colourModeIsSet ()
+{
+    [[ -n "$_colourMode" ]]
 }

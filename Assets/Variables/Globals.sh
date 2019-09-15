@@ -5,6 +5,7 @@ declare -g -- _direction=
 declare -g -- _ghostY=
 declare -g -- _level=
 declare -g -- _lines=
+declare -g -- _lockID=
 declare -g -- _newPiece=1
 declare -g -- _nextPiece=
 declare -g -- _pieceX=
@@ -19,6 +20,8 @@ declare -g -- _gameMode=0
 declare -g -- _colourMode=
 
 declare -ag -- _replayInputs=()
+
+declare -Ag -- _lock=()
 
 declare -Ag _selected=(
     ["main"]=0

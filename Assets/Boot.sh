@@ -3,13 +3,16 @@
 boot ()
 {
     # If game is loaded on a terminal outside of a GUI environment
-    if [[ "$DISPLAY" == "" || "$TERM" == "linux" ]]; then
-        setSimpleColourMode
-    else
-        setNormalColourMode
+    if ! colourModeIsSet; then
+        if [[ "$DISPLAY" == "" || "$TERM" == "linux" ]]; then
+            setSimpleColourMode
+        else
+            setNormalColourMode
+        fi
     fi
 
-    setColours
+    loadColours
+    loadScreens
 
     [[ -s "$HIGHSCORE_LOG" ]] || >"$HIGHSCORE_LOG" # Create score log if doesn"t exist
 
@@ -19,13 +22,8 @@ boot ()
     exec 2>"$ERROR_LOG"
     exec 5>"$DEBUG_LOG"
 
-    if (( $_debug )); then
+    if debuggingIsSet; then
         # Debug mode sends STDERR to an error file
         set -xT
     fi
-}
-
-loadScreens ()
-{
-    unicodeEnabled && setNormalUI || setSimpleUI
 }

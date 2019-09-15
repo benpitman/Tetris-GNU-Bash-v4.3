@@ -360,6 +360,6 @@ navigateTo ()
 
 renderText ()
 {
-    (( $# > 1 )) && printf "${COLOURS[0]}%b\e[0m\n" "${@:1:$#-1}"
-    printf "${COLOURS[0]}%b\e[0m" "${@: -1}"
+    (( $# > 1 )) && printf "${COLOURS[${COLOURS_LOOKUP[R]}]}%b\e[0m\n" "${@:1:$#-1}"
+    printf "${COLOURS[${COLOURS_LOOKUP[R]}]}%b\e[0m" "${@: -1}"
 }

@@ -361,7 +361,7 @@ declare -Arg -- FIELD_OPTIONS=(
     ["PERFECT,0,Y"]=11
     ["PERFECT,0,X"]=5
     ["PERFECT,0,TEXT"]="P E R F E C T"
-    ["PERFECT,0,CLEAR"]="              "
+    ["PERFECT,0,CLEAR"]="             "
 
     ["PERFECT,1,Y"]=13
     ["PERFECT,1,X"]=7

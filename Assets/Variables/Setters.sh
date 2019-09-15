@@ -35,7 +35,7 @@ setState ()
     _state=$1
 }
 
-#################################### OTHER #####################################
+#################################### MODES #####################################
 
 setGameMode ()
 {
@@ -55,6 +55,34 @@ setReplayMode ()
         ["memory"]=1
         ["rotate"]=1
     )
+}
+
+################################# COLLISION ####################################
+
+loadCollision ()
+{
+    local -- yPos=
+    local -- xPos=
+
+    _lockID=0
+
+    for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
+        for (( xPos = $LEFT_WALL; xPos <= $RIGHT_WALL; xPos += 2 )); do
+            _lock[$yPos,$xPos]=0
+            _lock[$yPos,$xPos,ID]=
+            _lock[$yPos,$xPos,COLOUR]=
+        done
+    done
+}
+
+setCollision ()
+{
+    local -- yPos=$1
+    local -- xPos=$2
+
+    _lock[$yPos,$xPos]=0
+    _lock[$yPos,$xPos,ID]=
+    _lock[$yPos,$xPos,COLOUR]=
 }
 
 ################################### TOGGLES ####################################
@@ -127,10 +155,9 @@ setBleachColourMode ()
 setColourMode ()
 {
     _colourMode=$1
-    loadScreens
 }
 
-setColours ()
+loadColours ()
 {
     case $_colourMode in
         (0) {
@@ -161,7 +188,7 @@ setColours ()
         };;
         (2) {
             declare -Ag -- COLOURS_LOOKUP=(
-                [R]=10 # Reset
+                [R]=9 # Reset
                 [I]=9
                 [J]=9
                 [L]=9
@@ -169,12 +196,12 @@ setColours ()
                 [S]=9
                 [T]=9
                 [Z]=9
-                [W]=9 # White
+                [W]=9
             )
         };;
         (3) {
             declare -Ag -- COLOURS_LOOKUP=(
-                [R]=9 # Reset
+                [R]=10 # Reset
                 [I]=10
                 [J]=10
                 [L]=10
@@ -182,13 +209,18 @@ setColours ()
                 [S]=10
                 [T]=10
                 [Z]=10
-                [W]=10 # White
+                [W]=10
             )
         };;
     esac
 }
 
 ################################## Screens #####################################
+
+loadScreens ()
+{
+    unicodeEnabled && setNormalUI || setSimpleUI
+}
 
 setNormalUI ()
 {

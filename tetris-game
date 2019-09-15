@@ -30,11 +30,10 @@ die ()
 trap die INT EXIT
 
 declare -arg -- AUTOLOAD=(
-    "Core/Globals"
-    "Core/Constants"
-
-    "Logic/Getters"
-    "Logic/Setters"
+    "Variables/Globals"
+    "Variables/Constants"
+    "Variables/Getters"
+    "Variables/Setters"
 
     "Boot"
     "Theme"
@@ -269,8 +268,7 @@ newGame ()
     _lines=0
 
     # Collision detection
-    unset _lock
-    declare -Ag -- _lock[{2..23},{2..20..2}]=${COLOURS_LOOKUP[R]}
+    loadCollision
 
     # Truncate input log file
     recordEnabled && >"$INPUT_LOG"

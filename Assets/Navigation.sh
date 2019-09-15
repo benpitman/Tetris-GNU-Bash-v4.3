@@ -270,8 +270,10 @@ saveSettings ()
 {
     if (( $LEGACY )); then
         declare -p -- _gameBooleans
+        declare -p -- _gameModes
     else
         echo "${_gameBooleans[@]@A}"
+        echo "${_gameModes[@]@A}"
     fi > "$SETTINGS"
 }
 
@@ -290,7 +292,7 @@ renderSettings ()
         (0) {
             navigateMenu "SETTINGS_COLOUR_SUB_MENU"
             setColourMode $?
-            setColours
+            loadColours
         };;
         (1) {
             navigateMenu "SETTINGS_GAME_SUB_MENU"
