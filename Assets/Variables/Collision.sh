@@ -10,7 +10,7 @@ lockPiece ()
 
     for coord in ${piece[$_rotation]}; do
         toCheck[(( $yPos + ${coord#*,} ))]= # Save as keys to avoid duplicates
-        _lock[$(( $yPos + ${coord#*,} )),$(( $xPos + (${coord%,*} * 2) ))]=${COLOURS_LOOKUP[$pieceKey]}
+        setCollision $(( $yPos + ${coord#*,} )) $(( $xPos + (${coord%,*} * 2) )) ${COLOURS_LOOKUP[$pieceKey]}
     done
 
     checkLines ${!toCheck[@]}

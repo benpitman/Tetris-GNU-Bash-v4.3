@@ -140,7 +140,7 @@ checkTerminalSize()
     stty echo
 }
 
-debugMode=false
+debugMode=0
 replayFile=
 while getopts ":h :u :r: :x" arg; do
     case $arg in
@@ -151,7 +151,7 @@ while getopts ":h :u :r: :x" arg; do
             else
                 die "$OPTARG is not a file"
             fi;;
-        x)  debugMode=true;;
+        x)  debugMode=1;;
         \?) die "Invalid option -$OPTARG";;
         \:) die "Option -$OPTARG requires a parameter";;
     esac

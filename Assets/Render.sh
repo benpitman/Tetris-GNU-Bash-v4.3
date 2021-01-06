@@ -136,7 +136,7 @@ destroyLines ()
         for yPos in ${lineIndexes[@]}; do
             navigateTo $yPos $xPos
             renderBlankTile
-            _lock[$yPos,$xPos]=${COLOURS_LOOKUP[R]}
+            setCollision $yPos $xPos ${COLOURS_LOOKUP[R]} 0
         done
         sleep 0.02
     done
@@ -150,19 +150,21 @@ destroyLines ()
         fi
 
         for xPlus in ${X_POSITIONS[@]}; do
-            colour=${_lock[$yPlus,$xPlus]}
+            getLockColourID $yPlus $xPlus
+            colour=$?
 
-            if (( $colour )); then
+            if hasCollision $yPlus $xPlus; then
                 navigateTo $yPlus $xPlus
                 renderBlankTile
                 navigateTo $(( $yPlus + $offset )) $xPlus
                 renderBlockTile $colour
-                _lock[$yPlus,$xPlus]=${COLOURS_LOOKUP[R]}
+                setCollision $yPlus $xPlus ${COLOURS_LOOKUP[R]} 0
+                setCollision $(( $yPlus + $offset )) $xPlus $colour
             else
                 (( zeroes++ ))
+                setCollision $(( $yPlus + $offset )) $xPlus $colour 0
             fi
 
-            _lock[$(( $yPlus + $offset )),$xPlus]=$colour
         done
 
         (( $zeroes == 10 )) && break || zeroes=0 # Blank line detected (no further lines above can have colour)
@@ -233,7 +235,7 @@ canRender ()
         (( yAx = $yPos + ${coord#*,} ))
 
         # Needs to check tetromino collision first for rotation
-        if (( ${_lock[$yAx,$xAx]} != ${COLOURS_LOOKUP[R]} )); then
+        if hasCollision $yAx $xAx; then
             return 4
         elif (( $xAx > $RIGHT_WALL )); then
             return 1

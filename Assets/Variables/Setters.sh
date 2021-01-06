@@ -48,12 +48,12 @@ setReplayMode ()
     _replayInputs=( $( fold -b1 "$1" ) )
 
     _gameBooleans=(
-        ["hold"]=1
-        ["next"]=1
-        ["ghost"]=1
-        ["record"]=1
-        ["memory"]=1
-        ["rotate"]=1
+        ["hold"]=0
+        ["next"]=0
+        ["ghost"]=0
+        ["record"]=0
+        ["memory"]=0
+        ["rotate"]=0
     )
 }
 
@@ -68,7 +68,7 @@ loadCollision ()
 
     for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
         for (( xPos = $LEFT_WALL; xPos <= $RIGHT_WALL; xPos += 2 )); do
-            setCollision $yPos $xPos 0 0 ${COLOURS_LOOKUP[R]}
+            setCollision $yPos $xPos ${COLOURS_LOOKUP[R]} 0
         done
     done
 }
@@ -77,10 +77,13 @@ setCollision ()
 {
     local -- yPos=$1
     local -- xPos=$2
+    local -- colour=$3
+    local -- collisionBit=${4:-1}
+    local -- id=${5:-$_lockID}
 
-    _lock[$yPos,$xPos]=$3
-    _lock[$yPos,$xPos,ID]=$4
-    _lock[$yPos,$xPos,COLOUR]=$5
+    _lock[$yPos,$xPos]=$collisionBit
+    _lock[$yPos,$xPos,ID]=$id
+    _lock[$yPos,$xPos,COLOUR]=$colour
 }
 
 ################################### TOGGLES ####################################
@@ -92,8 +95,7 @@ toggleNext ()
 
 toggleHold ()
 {
-    return
-    # toggleBoolean "hold"
+    toggleBoolean "hold"
 }
 
 toggleGhost ()

@@ -195,7 +195,7 @@ gameLoop ()
         preTime=$( date "+%2N" )
         preTime=${preTime#0}
 
-        # Lower numer means faster speed
+        # Lower number means faster speed
         (( speed = 90 - $_level * 4 ))
         (( $speed < 20 )) && speed=20
 

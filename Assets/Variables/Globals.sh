@@ -5,7 +5,7 @@ declare -g -- _direction=
 declare -g -- _ghostY=
 declare -g -- _level=
 declare -g -- _lines=
-declare -g -- _lockID=
+declare -g -- _lockID= #Unused currently, was for fading pieces
 declare -g -- _newPiece=1
 declare -g -- _nextPiece=
 declare -g -- _pieceX=
@@ -31,7 +31,7 @@ declare -Ag _selected=(
 
 # zero is true for these because they are exit statuses
 declare -Ag -- _gameBooleans=(
-    ["hold"]=1
+    ["hold"]=0
     ["next"]=0
     ["ghost"]=0
     ["record"]=0

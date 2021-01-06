@@ -115,8 +115,8 @@ renderField ()
 
 renderScores ()
 {
-    local -- editableIndex=${SCORES[MAX]}
-    local -- editableRow=$(( ${SCORES[Y]} + $editableIndex ))
+    local -- editableIndex=0
+    local -- editableRow=0
     local -- line
     local -- newScore=0
     local -- playername
@@ -138,14 +138,15 @@ renderScores ()
     fi
 
     for (( line = 0; $line < ${#scores[@]}; line++ )); do
-        userScores[$line]=${scores[$line]/*\,/}
-        userNames[$line]=${scores[$line]/\,*/}
+        userScores[$line]=${scores[$line]#*,}
+        userNames[$line]=${scores[$line]%,*}
 
         if (( $scoreShown == 0 && $newScore && ${userScores[$line]} <= $_score )); then
             scoreShown=1
             editableIndex=$line
         fi
     done
+    (( $scoreShown == 0 && $newScore )) && editableIndex=$line
 
     if (( $newScore )); then
         [[ "$editableIndex" == "" ]] && editableIndex=${#scores[@]}
@@ -170,6 +171,7 @@ renderScores ()
             printScore $scoreRow ${SCORES[X]} $(( $scoreIndex + 1 )) "${userNames[$scoreIndex]}" ${userScores[$scoreIndex]}
         fi
     done
+    (( $editableRow )) || editableRow=$(( ${SCORES[Y]} + ${SCORES[MAX]} ))
 
     if (( $newScore )); then
         printScore $editableRow ${SCORES[X]} $(( $editableIndex + 1 )) "" $_score 1

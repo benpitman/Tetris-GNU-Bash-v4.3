@@ -17,8 +17,7 @@ getReadableNext ()
 
 getReadableHold ()
 {
-    # holdEnabled && printf -v $1 "%s" "ACTIVE" || printf -v $1 "%s" "INACTIVE"
-    printf -v $1 "%s" "DISABLED"
+    holdEnabled && printf -v $1 "%s" "ACTIVE" || printf -v $1 "%s" "INACTIVE"
 }
 
 getReadableGhost ()
@@ -52,6 +51,11 @@ getReadableUI ()
 hasCollision ()
 {
     (( ${_lock[$1,$2]} ))
+}
+
+getLockColourID ()
+{
+    return ${_lock[$1,$2,COLOUR]}
 }
 
 getNextLockID ()

@@ -1,25 +1,62 @@
 #!/bin/bash
 
-if [[ "$UID" != "0" ]]; then
-    printf "Your password is required to install this game.
-            \rLeave blank to cancel install.
-            \rRun as root if you don't have a password.\n"
-    while true; do
-        IFS= read -sp '> ' PASS
-        [ -z "$PASS" ] && exit 0
-        if $( echo "$PASS" | sudo -Svp '' ); then
-            break
+# if [[ "$UID" != "0" ]]; then
+#     printf "Your password is required to install this game.
+#             \rLeave blank to cancel install.
+#             \rRun as root if you don't have a password."
+#     while true; do
+#         IFS= read -sp "> " password
+#         [[ -z "$password" ]] && exit 0
+
+#         if $( echo "$password" | sudo -Svp "" ); then
+#             break
+#         fi
+#     done
+#     doSudo="sudo"
+# else
+#     doSudo=
+# fi
+
+logDir="/var/games/tetris"
+replayDir="/var/games/tetris/replays"
+installDir="/usr/local/"
+
+while true; do
+    printf '\n%s\n%s\n' "Where would you like to install Tetris?" "Default is ${installDir}"
+
+    read path
+    [[ -z "$path" ]] && { echo "Defaulting to ${installDir}"; break; }
+
+    [[ "${path:0:1}" == "~" ]] && path="${HOME}${path:1}"
+    [[ "${path:0:1}" != "/" ]] && path="${PWD}/${path:0}"
+
+    if [[ -d "$path" ]]; then
+        if ! [[ -w "$path" ]]; then
+            echo "${path} is not writeable"
+            continue
         fi
+        installDir="$path"
+        break
+    fi
+
+    printf "\n${path} is not a directory.
+            \rWould you like me to attempt to create it?\n"
+
+    while true; do
+        IFS= read -p "(Yes/No/Cancel): " create
+        [[ "$create" =~ ^[yY](es)?$ ]] && break
+        [[ "$create" =~ ^[nN]o?$ ]] && continue 2
+        [[ "$create" =~ ^[cC](ancel)?$ ]] && { echo "Defaulting to ${installDir}"; break 2; }
     done
-    doSudo=sudo
-else
-    doSudo=
-fi
 
-logDir='/var/games/tetris'
-replayDir='/var/games/tetris/replays'
+    if $( mkdir -p $path ); then
+        echo ""
+        break
+    fi
 
-$doSudo mkdir -p "$replayDir" 2>/dev/null
-$doSudo chmod -R o+wr "$logDir"
+done
+
+# $doSudo mkdir -p "$replayDir" 2>/dev/null
+# $doSudo chmod -R o+wr "$logDir"
 
 printf "\nTetris installed.\n\n"
