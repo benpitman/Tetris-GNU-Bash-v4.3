@@ -272,10 +272,12 @@ saveSettings ()
 {
     if (( $LEGACY )); then
         declare -p -- _gameBooleans
-        declare -p -- _gameModes
+        declare -p -- _gameMode
+        declare -p -- _colourMode
     else
         echo "${_gameBooleans[@]@A}"
-        echo "${_gameModes[@]@A}"
+        echo "${_gameMode@A}"
+        echo "${_colourMode@A}"
     fi > "$SETTINGS"
 }
 

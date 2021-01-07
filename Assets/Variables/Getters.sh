@@ -1,11 +1,11 @@
 getReadableColourMode ()
 {
-    printf -v $1 ${COLOUR_MODE[$_colourMode]}
+    printf -v $1 ${SETTINGS_COLOUR_SUB_MENU[$_colourMode,TEXT]}
 }
 
 getReadableGameMode ()
 {
-    printf -v $1 ${GAME_MODE[$_gameMode]}
+    printf -v $1 ${SETTINGS_GAME_SUB_MENU[$_gameMode,TEXT]}
 }
 
 ################################ READABLES #####################################

@@ -40,30 +40,6 @@ if [[ -s "$SETTINGS" ]] && (( $_replay == 0 )); then
     source "$SETTINGS"
 fi
 
-############################## States and Modes ################################
-
-declare -Arg STATE=(
-    ["MAIN"]=0
-    ["FIELD"]=1
-    ["SCORES"]=2
-    ["SETTINGS"]=3
-    ["CONSTANTS"]=4
-    ["ABOUT"]=5
-    ["GAME_OVER"]=6
-)
-
-declare -arg COLOUR_MODE=(
-    "NORMAL"
-    "SIMPLE"
-    "SHADOW"
-    "BLEACH"
-)
-
-declare -arg GAME_MODE=(
-    "NORMAL"
-    " HARD "
-)
-
 ############################### Menu Navigation ################################
 
 declare -rg -- START_Y=2

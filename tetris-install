@@ -1,25 +1,30 @@
 #!/bin/bash
 
-# if [[ "$UID" != "0" ]]; then
-#     printf "Your password is required to install this game.
-#             \rLeave blank to cancel install.
-#             \rRun as root if you don't have a password."
-#     while true; do
-#         IFS= read -sp "> " password
-#         [[ -z "$password" ]] && exit 0
+if ! [[ -s ./tetris ]]; then
+    printf "Please cd to into the extracted/pulled tetris folder"
+    exit 1
+fi
 
-#         if $( echo "$password" | sudo -Svp "" ); then
-#             break
-#         fi
-#     done
-#     doSudo="sudo"
-# else
-#     doSudo=
-# fi
+if [[ "$UID" != "0" ]]; then
+    printf "Your password is required to install this game.
+            \rLeave blank to cancel install.
+            \rRun as root if you don't have a password.\n"
+    while true; do
+        IFS= read -sp "> " password
+        [[ -z "$password" ]] && exit 0
 
-logDir="/var/games/tetris"
-replayDir="/var/games/tetris/replays"
-installDir="/usr/local/"
+        if $( echo "$password" | sudo -Svp "" ); then
+            break
+        fi
+    done
+    doSudo="sudo"
+else
+    doSudo=
+fi
+
+rootDir="/var/games/tetris"
+replayDir="${rootDir}/replays"
+installDir="/usr/local/bin/tetris"
 
 while true; do
     printf '\n%s\n%s\n' "Where would you like to install Tetris?" "Default is ${installDir}"
@@ -29,6 +34,14 @@ while true; do
 
     [[ "${path:0:1}" == "~" ]] && path="${HOME}${path:1}"
     [[ "${path:0:1}" != "/" ]] && path="${PWD}/${path:0}"
+
+    if [[ "$path" =~ [\#\%\&\{\}\\\<\>\*\?\/\$\!\'\"\:\@\+\`\|\=] ]]; then
+        echo "Path contains an illegal character"
+        continue
+    elif [[ "$path" =~ [\ \n\t\v] ]]; then
+        echo "It is advisable to not have whitespace in the path"
+        continue
+    fi
 
     if [[ -d "$path" ]]; then
         if ! [[ -w "$path" ]]; then
@@ -50,13 +63,20 @@ while true; do
     done
 
     if $( mkdir -p $path ); then
-        echo ""
+        echo
         break
     fi
 
 done
 
-# $doSudo mkdir -p "$replayDir" 2>/dev/null
-# $doSudo chmod -R o+wr "$logDir"
+$doSudo mkdir -vp {"$replayDir","$installDir"} 2>/dev/null
+$doSudo chmod -vR o+rw "$rootDir"
+$doSudo cp -vr ./{tetris,tetris-game,Assets} "$installDir"
+$doSudo chmod -vR o+rwx "$installDir"
+
+if ! [[ " ${PATH//:/ } " =~ " ${installDir} " ]]; then
+    printf "\nPlease put the following line into your ${HOME}/.bashrc or other profile script\n"
+    echo "export PATH=\$PATH:${installDir}"
+fi
 
 printf "\nTetris installed.\n\n"

@@ -32,14 +32,9 @@ declare -Ag _selected=(
 # zero is true for these because they are exit statuses
 declare -Ag -- _gameBooleans=(
     ["hold"]=0
-    ["next"]=0
-    ["ghost"]=0
-    ["record"]=0
-    ["memory"]=1
-    ["rotate"]=1
-)
-
-declare -Ag -- _gameModes=(
-    ["difficulty"]=0
-    ["colour"]=0
+    ["next"]=1
+    ["ghost"]=1
+    ["record"]=1
+    ["memory"]=0
+    ["rotate"]=0
 )

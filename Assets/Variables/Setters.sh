@@ -96,6 +96,7 @@ toggleNext ()
 toggleHold ()
 {
     toggleBoolean "hold"
+    loadScreens
 }
 
 toggleGhost ()

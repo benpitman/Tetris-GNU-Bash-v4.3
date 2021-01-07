@@ -19,11 +19,10 @@ boot ()
     stty -echo  # Disable echo
     tput civis  # Disable cursor blinker
 
-    exec 2>"$ERROR_LOG"
-    exec 5>"$DEBUG_LOG"
-
     if debuggingIsSet; then
-        # Debug mode sends STDERR to an error file
         set -xT
+        exec 2>"$DEBUG_LOG"
+    else
+        exec 2>"$ERROR_LOG"
     fi
 }
