@@ -1,6 +1,6 @@
 # Tetris
 
-![tetris](https://user-images.githubusercontent.com/26070332/104516528-66300d00-55ec-11eb-83fe-a347db8a51a8.gif)
+![tetris](https://user-images.githubusercontent.com/26070332/104521002-0178b080-55f4-11eb-9b68-ff1b3f6c5f1b.gif)
 
 ## ------------------------{ About }--------------------------
 
