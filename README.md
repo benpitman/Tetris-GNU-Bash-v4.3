@@ -1,6 +1,6 @@
 # Tetris
 
-![tetris](https://user-images.githubusercontent.com/26070332/54070557-2f9f4380-4259-11e9-8c30-8b9a1aff2509.gif)
+![tetris](https://user-images.githubusercontent.com/26070332/104521002-0178b080-55f4-11eb-9b68-ff1b3f6c5f1b.gif)
 
 ## ------------------------{ About }--------------------------
 
@@ -13,7 +13,7 @@ It's just Tetris, really, with some additional features:
 
 ## ---------------------{ Installation }----------------------
 
-Download the latest Release [here](https://github.com/benpitman/Tetris-GNU-Bash-v4.3/releases/latest) and move the tetris file to `/usr/local/bin/` making sure it's executable.
+Download the latest Release [here](https://github.com/benpitman/Tetris-GNU-Bash-v4.3/releases/latest) and run the tetris-install file.
 
 ## ------------------------{ Usage }--------------------------
 
