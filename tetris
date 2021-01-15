@@ -6,10 +6,7 @@ die ()
     exit 1
 }
 
-if (( ${BASH_VERSINFO[0]} < 4 )); then
-    die 'Incorrect Bash version. Requires 4.3 or later'
-fi
-if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
+if (( ${BASH_VERSINFO[0]} < 4 || (${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3) )); then
     die 'Incorrect Bash version. Requires 4.3 or later'
 fi
 
@@ -31,6 +28,8 @@ Usage: $0 [-h] [-g] [-r FILE] [-x] ...
 
         -u      uninstalls the game
 
+        -p      same as -u, but also deletes config and save data
+
         -r FILE
                 runs in replay mode
 
@@ -47,29 +46,46 @@ ____HELP
 
 uninstallTetris ()
 {
-    local password
+    local -- purge=${1:-0}
+    local -- doSudo
+    local -- password
+    local -- purgeYNC
 
     if [[ "$UID" != "0" ]]; then
-        sudo -k
-        printf 'Your password is required to uninstall this game.
-                \rLeave blank to cancel uninstall.'
-        while read -rsp $'\n> ' password; do
-            [ -z "$password" ] && exit 0
-            if { echo "$password" | sudo -Svp ''; } 2>/dev/null; then
+        printf "Your password is required to uninstall this game.
+                \rDo not run as root unless that is the only user\n"
+        while true; do
+            IFS= read -sp "> " password
+
+            if $( echo "$password" | sudo -Svp "" ); then
+                echo
                 break
-            else
-                printf 'Error: Invalid Password'
             fi
         done
-        sudo rm -rf /var/games/tetris
-        sudo rm -f /usr/local/bin/tetris /usr/local/bin/tetris-game
+        doSudo="sudo"
     else
-        rm -rf /var/games/tetris
-        rm -f /usr/local/bin/tetris /usr/local/bin/tetris-game
+        doSudo=
     fi
 
-    printf 'uninstallation complete\n'
-    exit 0
+    if ! (( $purge )); then
+        printf '\n%s\n' "Would you like to also delete config files and save data?"
+        while true; do
+            IFS= read -p "(Yes/No/Cancel): " purgeYNC
+            [[ "$purgeYNC" =~ ^[yY](es)?$ ]] && { purge=1; break; }
+            [[ "$purgeYNC" =~ ^[nN]o?$ ]] && break
+            [[ "$purgeYNC" =~ ^[cC](ancel)?$ ]] && exit
+        done
+        echo
+    fi
+
+    if (( $purge )); then
+        $doSudo rm -rvf "${HOME}/.config/tetris"
+    fi
+
+    $doSudo rm -vf "/usr/local/bin/tetris"
+    $doSudo rm -vrf "/usr/local/bin/tetris-files"
+
+    printf "\nTetris uninstalled.\n\n"
 }
 
 checkTerminalSize ()
@@ -142,13 +158,16 @@ checkTerminalSize ()
 debugMode=0
 replayFile=
 
-while getopts ":h :u :r: :x" arg; do
+while getopts ":h :u :p :r: :x" arg; do
     case $arg in
         (h) {
             showHelp
         };;
         (u) {
-            uninstallTetris
+            uninstallTetris 0
+        };;
+        (p) {
+            uninstallTetris 1
         };;
         (r) {
             [[ -s "$OPTARG" ]] || die "$OPTARG is not a file"
@@ -167,4 +186,4 @@ while getopts ":h :u :r: :x" arg; do
 done
 
 checkTerminalSize
-bash tetris-game "$debugMode" "$replayFile"
+bash "${0%/*}/tetris-files/tetris-game" "$debugMode" "$replayFile"

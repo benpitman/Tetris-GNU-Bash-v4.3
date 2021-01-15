@@ -7,11 +7,7 @@
         Replay mode file to be used as input log
 TetrisDoc
 
-if (( ${BASH_VERSINFO[0]} < 4 )); then
-    echo "Incorrect Bash version. Requires 4.3 or later"
-    exit 1
-fi
-if (( ${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3 )); then
+if (( ${BASH_VERSINFO[0]} < 4 || (${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3) )); then
     echo "Incorrect Bash version. Requires 4.3 or later"
     exit 1
 fi
@@ -23,7 +19,7 @@ fi
 die ()
 {
     tput cvvis
-    printf "\e[0m\e[24;1H\n"
+    printf "\e[0m\e[$(( FLOOR + 1 ));1H\n"
     stty sane
     exit 0
 }
@@ -46,7 +42,7 @@ declare -arg -- AUTOLOAD=(
 )
 
 for import in "${AUTOLOAD[@]}"; do
-    source "./Assets/${import}.sh"
+    source "${0%/*}/Assets/${import}.sh"
 done
 unset import
 
@@ -119,7 +115,6 @@ replayGameLoop ()
             (( $? )) && continue
 
             renderPiece
-            set -x
             clearBuffer
         elif (( $updatePosition )); then
             translatePiece

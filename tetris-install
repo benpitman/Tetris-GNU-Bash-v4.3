@@ -1,19 +1,27 @@
 #!/bin/bash
 
-if ! [[ -s ./tetris ]]; then
-    printf "Please cd to into the extracted/pulled tetris folder"
+die ()
+{
+    printf '%s\n' "$@"
     exit 1
+}
+
+if (( ${BASH_VERSINFO[0]} < 4 || (${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 3) )); then
+    die "Incorrect Bash version. Requires 4.3 or later"
+fi
+
+if ! [[ -f ./tetris && -s ./tetris ]]; then
+    die "Please cd to into the extracted/pulled tetris folder"
 fi
 
 if [[ "$UID" != "0" ]]; then
     printf "Your password is required to install this game.
-            \rLeave blank to cancel install.
-            \rRun as root if you don't have a password.\n"
+            \rDo not run as root unless that is the only user\n"
     while true; do
         IFS= read -sp "> " password
-        [[ -z "$password" ]] && exit 0
 
         if $( echo "$password" | sudo -Svp "" ); then
+            echo
             break
         fi
     done
@@ -22,57 +30,17 @@ else
     doSudo=
 fi
 
-rootDir="/var/games/tetris"
+rootDir="${HOME}/.config/tetris"
 replayDir="${rootDir}/replays"
-installDir="/usr/local/bin/tetris"
+installDir="/usr/local/bin"
+installSubDir="${installDir}/tetris-files"
 
-while true; do
-    printf '\n%s\n%s\n' "Where would you like to install Tetris?" "Default is ${installDir}"
-
-    read path
-    [[ -z "$path" ]] && { echo "Defaulting to ${installDir}"; break; }
-
-    [[ "${path:0:1}" == "~" ]] && path="${HOME}${path:1}"
-    [[ "${path:0:1}" != "/" ]] && path="${PWD}/${path:0}"
-
-    if [[ "$path" =~ [\#\%\&\{\}\\\<\>\*\?\/\$\!\'\"\:\@\+\`\|\=] ]]; then
-        echo "Path contains an illegal character"
-        continue
-    elif [[ "$path" =~ [\ \n\t\v] ]]; then
-        echo "It is advisable to not have whitespace in the path"
-        continue
-    fi
-
-    if [[ -d "$path" ]]; then
-        if ! [[ -w "$path" ]]; then
-            echo "${path} is not writeable"
-            continue
-        fi
-        installDir="$path"
-        break
-    fi
-
-    printf "\n${path} is not a directory.
-            \rWould you like me to attempt to create it?\n"
-
-    while true; do
-        IFS= read -p "(Yes/No/Cancel): " create
-        [[ "$create" =~ ^[yY](es)?$ ]] && break
-        [[ "$create" =~ ^[nN]o?$ ]] && continue 2
-        [[ "$create" =~ ^[cC](ancel)?$ ]] && { echo "Defaulting to ${installDir}"; break 2; }
-    done
-
-    if $( mkdir -p $path ); then
-        echo
-        break
-    fi
-
-done
-
-$doSudo mkdir -vp {"$replayDir","$installDir"} 2>/dev/null
-$doSudo chmod -vR o+rw "$rootDir"
-$doSudo cp -vr ./{tetris,tetris-game,Assets} "$installDir"
-$doSudo chmod -vR o+rwx "$installDir"
+mkdir -vp "$replayDir" 2>/dev/null
+$doSudo mkdir -vp "$installSubDir" 2>/dev/null
+$doSudo cp -v ./tetris "$installDir"
+$doSudo cp -vr ./{tetris-game,Assets} "$installSubDir"
+$doSudo chmod -v 755 "${installDir}/tetris"
+$doSudo chmod -vR 755 "$installSubDir"
 
 if ! [[ " ${PATH//:/ } " =~ " ${installDir} " ]]; then
     printf "\nPlease put the following line into your ${HOME}/.bashrc or other profile script\n"

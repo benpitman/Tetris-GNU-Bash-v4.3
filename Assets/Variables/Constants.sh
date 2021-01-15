@@ -1,7 +1,7 @@
 ################################## GENERAL #####################################
 
-declare -rg -- LOG_DIR="/var/games/tetris"
-declare -rg -- REPLAY_DIR="/var/games/tetris/replays"
+declare -rg -- LOG_DIR="${HOME}/.config/tetris"
+declare -rg -- REPLAY_DIR="${LOG_DIR}/replays"
 
 declare -rg -- PS4='+(${LINENO}) ${FUNCNAME[0]}(): '
 declare -rg -- BASH_XTRACEFD=5 2>/dev/null
