@@ -73,7 +73,7 @@ loadNewPiece ()
     if (( $_replay )); then
         _currentPiece=${_replayInputs[$(( _replayIndex++ ))]}
     else
-        if [[ "$_nextPiece" != "" ]]; then
+        if [[ -n "$_nextPiece" ]]; then
             _currentPiece=$_nextPiece
         else
             while {
@@ -210,8 +210,11 @@ gameLoop ()
             if [[ "$key1" == "" ]] || [[ "$key1" == " " ]]; then
                 rotatePiece
                 sleep 0.05
-            elif [[ "$key1" == [Pp] ]] && [[ "$key2" == "" && "$key3" == "" ]]; then
+            elif [[ "$key1" =~ $KEY_PAUSE ]] && [[ "$key2" == "" && "$key3" == "" ]]; then
                 pause
+            elif [[ "$key1" =~ $KEY_QUIT ]] && [[ "$key2" == "" && "$key3" == "" ]]; then
+                renderQuitGameMenu
+                (( $? )) && break
             elif [[ "$key1" == $'\e' ]] && [[ "$key2" != "" ]]; then # If escape character is pressed
                 case $key3 in
                     ($KEY_UP) {
@@ -262,6 +265,9 @@ newGame ()
 {
     _level=0
     _lines=0
+    _score=0
+    _newPiece=1
+    _nextPiece=
 
     # Collision detection
     loadCollision

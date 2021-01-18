@@ -18,6 +18,7 @@ declare -rg -- KEY_RIGHT="C"
 declare -rg -- KEY_LEFT="D"
 declare -rg -- KEY_SELECT='(^$| )'
 declare -rg -- KEY_PAUSE="[Pp]"
+declare -rg -- KEY_QUIT="[Qq]"
 
 declare -rg -- CEILING=2
 declare -rg -- FLOOR=23
@@ -45,34 +46,69 @@ fi
 declare -rg -- START_Y=2
 declare -rg -- START_X=8
 
-declare -Arg -- MAIN_MENU=(
-    ["MAX"]=4
+declare -Arg -- QUIT_GAME_MENU=(
+    ["MAX"]=1
     ["PADDING"]=" "
 
-    ["0,Y"]=11
+    ["HEADER,Y"]=10
+    ["HEADER,X"]=5
+    ["HEADER,TEXT"]="ARE YOU SURE?"
+
+    ["0,Y"]=12
+    ["0,X"]=6
+    ["0,TEXT"]="YES"
+    ["0,RUN"]="setMainState"
+
+    ["1,Y"]=12
+    ["1,X"]=13
+    ["1,TEXT"]="NO"
+)
+
+declare -Arg -- QUIT_GAME_CLEAR_MENU=(
+    ["MAX"]=3
+
+    ["Y"]=8
+    ["X"]=5
+
+    ["0"]="             "
+    ["1"]="             "
+    ["2"]="             "
+    ["3"]="             "
+)
+
+declare -Arg -- MAIN_MENU=(
+    ["MAX"]=5
+    ["PADDING"]=" "
+
+    ["0,Y"]=10
     ["0,X"]=12
     ["0,TEXT"]="N E W   G A M E"
     ["0,RUN"]="setFieldState"
 
-    ["1,Y"]=13
+    ["1,Y"]=12
     ["1,X"]=14
     ["1,TEXT"]="S C O R E S"
     ["1,RUN"]="setScoresState"
 
-    ["2,Y"]=15
+    ["2,Y"]=14
     ["2,X"]=12
     ["2,TEXT"]="S E T T I N G S"
     ["2,RUN"]="setSettingsState"
 
-    ["3,Y"]=17
-    ["3,X"]=15
-    ["3,TEXT"]="A B O U T"
-    ["3,RUN"]="setAboutState"
+    ["3,Y"]=16
+    ["3,X"]=12
+    ["3,TEXT"]="C O N T R O L S"
+    ["3,RUN"]="setControlsState"
 
-    ["4,Y"]=19
-    ["4,X"]=16
-    ["4,TEXT"]="Q U I T"
-    ["4,RUN"]="die"
+    ["4,Y"]=18
+    ["4,X"]=15
+    ["4,TEXT"]="A B O U T"
+    ["4,RUN"]="setAboutState"
+
+    ["5,Y"]=20
+    ["5,X"]=16
+    ["5,TEXT"]="Q U I T"
+    ["5,RUN"]="die"
 )
 
 declare -Arg -- ABOUT_MENU=(
@@ -291,7 +327,7 @@ declare -Arg -- CONSTANTS_SUB_MENU=(
     ["CLEAR,MAX"]=11
 )
 
-declare -Arg -- SCORES_MENU=(
+declare -Arg -- BACK_MENU=(
     ["MAX"]=0
     ["PADDING"]=" "
 

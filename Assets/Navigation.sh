@@ -7,8 +7,24 @@ navigateMenu ()
     local -- menuIndex
     local -- optionText
     local -- selected=${2:-0}
+    local -- vertical=${3:-1}
+    local -- previousKey
+    local -- nextKey
 
     local -n -- menu="$1"
+
+    if (( $vertical )); then
+        previousKey=$KEY_UP
+        nextKey=$KEY_DOWN
+    else
+        previousKey=$KEY_LEFT
+        nextKey=$KEY_RIGHT
+    fi
+
+    if [[ -n "${menu[HEADER,TEXT]}" ]]; then
+        navigateTo ${menu[HEADER,Y]} ${menu[HEADER,X]}
+        renderText "${menu[HEADER,TEXT]}"
+    fi
 
     while true; do
 
@@ -48,10 +64,10 @@ navigateMenu ()
         fi
 
         case $key3 in
-            ($KEY_UP) {
+            ($previousKey) {
                 (( $selected == 0 ? selected = ${menu[MAX]} : selected-- ))
             };;
-            ($KEY_DOWN) {
+            ($nextKey) {
                 (( $selected == ${menu[MAX]} ? selected = 0 : selected++ ))
             };;
         esac
@@ -98,6 +114,17 @@ renderPartial ()
         navigateTo ${partialOptions[$partial,Y]} $(( ${partialOptions[$partial,X]} + $half + 1 ))
         renderText "$optionText"
     done
+}
+
+renderQuitGameMenu ()
+{
+    clearPlayingField
+
+    navigateMenu 'QUIT_GAME_MENU' 0 0
+    (( $? )) || return 1
+    clearSubMenu "QUIT_GAME_CLEAR_MENU"
+
+    refreshPlayingField
 }
 
 renderMain ()
@@ -187,7 +214,7 @@ renderScores ()
         _score=0
     fi
 
-    navigateMenu 'SCORES_MENU'
+    navigateMenu 'BACK_MENU'
 }
 
 printScore ()
@@ -323,6 +350,13 @@ renderConstants ()
     saveSettings
 }
 
+renderControls ()
+{
+    renderText "${CONTROLS_SCREEN[@]}"
+
+    navigateMenu "BACK_MENU"
+}
+
 renderAbout ()
 {
     renderText "${ABOUT_SCREEN[@]}"
@@ -352,6 +386,9 @@ renderScreen ()
             renderConstants
         };;
         (5) {
+            renderControls
+        };;
+        (6) {
             renderAbout
         };;
     esac

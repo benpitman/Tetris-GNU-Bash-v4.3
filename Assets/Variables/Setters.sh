@@ -25,9 +25,14 @@ setConstantsState ()
     setState 4
 }
 
-setAboutState ()
+setControlsState ()
 {
     setState 5
+}
+
+setAboutState ()
+{
+    setState 6
 }
 
 setState ()
@@ -220,7 +225,7 @@ loadColours ()
 
 loadScreens ()
 {
-    unicodeEnabled && setNormalUI || setSimpleUI
+    unicodeEnabled && setNormalUI │ setSimpleUI
 }
 
 setNormalUI ()
@@ -379,6 +384,32 @@ setNormalUI ()
         "│                                        │"
         "│                                        │"
         "│                                        │"
+        "│                                        │"
+        "│                                        │"
+        "│                                        │"
+        "└────────────────────────────────────────┘"
+    )
+    declare -ag -- CONTROLS_SCREEN=(
+        "┌────────────────────────────────────────┐"
+        "│          ┌─────────────────╖           │"
+        "├──────────┤ C O N T R O L S ╟───────────┤"
+        "│          ╘═════════════════╝           │"
+        "│                                        │"
+        "│            G A M E P L A Y             │"
+        "│         ↑         -    Drop            │"
+        "│      ←  ↓  →      -    Move            │"
+        "│   Space / Enter   -    Rotate          │"
+        "│         P         -    Pause           │"
+        "│         Q         -    Quit Game       │"
+        "│                                        │"
+        "│               M E N U S                │"
+        "│         ↑                              │"
+        "│      ←  ↓  →      -    Navigation      │"
+        "│       Enter       -    Select          │"
+        "│     Backspace     -    Go back         │"
+        "│                                        │"
+        "│             G E N E R A L              │"
+        "│      Crtl-C       -    Quick Kill      │"
         "│                                        │"
         "│                                        │"
         "│                                        │"
@@ -568,6 +599,32 @@ setSimpleUI ()
         "│                                        │"
         "│                                        │"
         "│                                        │"
+        "│                                        │"
+        "│                                        │"
+        "│                                        │"
+        "└────────────────────────────────────────┘"
+    )
+    declare -ag -- CONTROLS_SCREEN=(
+        "┌────────────────────────────────────────┐"
+        "│          ┌─────────────────┐           │"
+        "├──────────┤ C O N T R O L S ├───────────┤"
+        "│          └─────────────────┘           │"
+        "│                                        │"
+        "│            G A M E P L A Y             │"
+        "│         ↑         -    Drop            │"
+        "│      ←  ↓  →      -    Move            │"
+        "│   Space / Enter   -    Rotate          │"
+        "│         P         -    Pause           │"
+        "│         Q         -    Quit Game       │"
+        "│                                        │"
+        "│               M E N U S                │"
+        "│         ↑                              │"
+        "│      ←  ↓  →      -    Navigation      │"
+        "│       Enter       -    Select          │"
+        "│     Backspace     -    Go back         │"
+        "│                                        │"
+        "│             G E N E R A L              │"
+        "│      Crtl-C       -    Quick Kill      │"
         "│                                        │"
         "│                                        │"
         "│                                        │"

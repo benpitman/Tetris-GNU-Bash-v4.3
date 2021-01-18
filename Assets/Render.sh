@@ -1,3 +1,42 @@
+clearPlayingField ()
+{
+    local -- yPos=
+    local -- xPos=
+
+    for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
+        xPos=$LEFT_WALL
+        navigateTo $yPos $xPos
+
+        for (( ; xPos <= $RIGHT_WALL; xPos += 2 )); do
+            renderBlankTile
+        done
+    done
+}
+
+refreshPlayingField ()
+{
+    local -- yPos=
+    local -- xPos=
+
+    for (( yPos = $CEILING; yPos <= $FLOOR; yPos++ )); do
+        xPos=$LEFT_WALL
+        navigateTo $yPos $xPos
+
+        for (( ; xPos <= $RIGHT_WALL; xPos += 2 )); do
+
+            if hasCollision $yPos $xPos; then
+                getLockColourID $yPos $xPos
+                renderBlockTile $?
+            else
+                renderBlankTile
+            fi
+        done
+    done
+
+    renderPiece
+    ghostEnabled && renderGhost
+}
+
 alert ()
 {
     local -- alertType=$1
